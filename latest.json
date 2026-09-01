@@ -1,7 +1,7 @@
 {
   "version": "1.5.3",
-  "notes": "A.C.E. v1.5.3 establishes the permanent GitHub update channel. Future versions will be downloaded and installed from inside A.C.E.",
-  "sha256": "d34a5470335622722c68c612ec34edb61e6c8e61bf1da72579abdd21a1bf08fd",
-  "size": 9136039,
+  "notes": "A.C.E. v1.5.3 establishes the permanent GitHub update channel and patch-based updater. Future versions will be published directly to this repository and installed from inside A.C.E.",
+  "sha256": "cedd44d9d4b4b20d32ecbb0f836a604dab858b6071f75f630065fccb38fb2ba1",
+  "size": 9140732,
   "chunks": []
 }
