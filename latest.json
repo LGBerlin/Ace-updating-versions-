@@ -1,6 +1,6 @@
 {
-  "version": "1.6.0",
-  "notes": "Core reliability release. Fixes the Preview Edit popup/infinite-loop path by replacing stacked alert/clone handlers with one deterministic editor route. Web research is faster and broader: Google, Bing and DuckDuckGo discovery stays parallel, Bing redirect results are now decoded correctly, source pages are fetched concurrently under strict time budgets, slow workers no longer hold the answer open, and Stop can cancel research. All 1.5.8 and 1.5.9 behavior is carried forward cumulatively.",
+  "version": "1.6.1",
+  "notes": "Workspace/UI release. Adds the new dark-green A.C.E. left rail and slide-out workspace, quick new chat, persistent separate chats and chat history, projects with per-chat assignment, an AI Search entry point that routes through the existing multi-source research engine, ChatGPT-style local image/file attachment chips and image previews, and Live-mode cards showing the current chat/project/current work plus a slide-out artifact preview. The supplied reference images informed the navigation and attachment interactions while the existing A.C.E. logo/color language remains intact. Update, Voice, Stop, Chat/Live, artifact Preview/Edit, regeneration and downloads remain on the validated 1.6.0 runtime. Image attachments are stored/displayed locally in this release; model-side visual understanding is not claimed yet.",
   "patch": {
     "base": "1.5.8",
     "files": [
@@ -23,15 +23,21 @@
         "mode": "644"
       },
       {
-        "path": "Contents/Resources/ACE Bootstrap.py",
+        "path": "Contents/Resources/ACE Base 1.6.0.py",
         "url": "updates/1.6.0/Contents/Resources/ACE%20Bootstrap%201.6.0%20core.py",
         "sha256": "3def95d0f6604969cbf6d5a2638127a1ffd31ad83f15551697a4b9aa7c0b7f33",
         "mode": "644"
       },
       {
+        "path": "Contents/Resources/ACE Bootstrap.py",
+        "url": "updates/1.6.1/Contents/Resources/ACE%20Bootstrap%201.6.1%20workspace.py",
+        "sha256": "d9c421ef1c4797e594f0797d68d5cd23bc2ca8a94ab8185bc75e643c380d5b1d",
+        "mode": "644"
+      },
+      {
         "path": "Contents/Info.plist",
-        "url": "updates/1.6.0/Contents/Info.plist",
-        "sha256": "b42d27c2fea8de8f309ae2f9b5870698ebe2b907f02ca12a1cacc39079aa6e76",
+        "url": "updates/1.6.1/Contents/Info.plist",
+        "sha256": "948646553faba95a63f41573f4c03751daa0c01f292d784a2f753cb8961f0b1c",
         "mode": "644"
       }
     ]
