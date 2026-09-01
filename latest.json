@@ -1,8 +1,8 @@
 {
-  "version": "1.5.8",
-  "notes": "Fixes the poster Preview Edit infinite loop by routing Edit directly into the real PPTX-backed poster editor, while preserving the 1.5.7 intent-first chat improvements. This final package uses a unique bootstrap URL so A.C.E. cannot receive a stale cached copy, and all integrity hashes match the exact published bytes.",
+  "version": "1.5.9",
+  "notes": "Restores and upgrades live web research across A.C.E. Factual questions, game questions, school/research questions, and factual posters/presentations now trigger multi-source research before A.C.E. answers or builds. Google is attempted first, with Bing and DuckDuckGo as additional/fallback discovery engines; A.C.E. then opens several distinct result pages, cross-checks the evidence, prefers primary/official sources, and avoids pretending it verified facts when live research fails.",
   "patch": {
-    "base": "1.5.7",
+    "base": "1.5.8",
     "files": [
       {
         "path": "Contents/Resources/ACE Base 1.5.7.py",
@@ -11,15 +11,21 @@
         "mode": "644"
       },
       {
-        "path": "Contents/Resources/ACE Bootstrap.py",
+        "path": "Contents/Resources/ACE Base 1.5.8.py",
         "url": "updates/1.5.8/Contents/Resources/ACE%20Bootstrap%201.5.8%20final.py",
         "sha256": "86b34b4e16841ecb4717fde0676b30cd4d4dd8ba0156f2dfea81b52e7a1aad17",
         "mode": "644"
       },
       {
+        "path": "Contents/Resources/ACE Bootstrap.py",
+        "url": "updates/1.5.9/Contents/Resources/ACE%20Bootstrap%201.5.9%20web.py",
+        "sha256": "5b645f5f53bfab02dc874a68d1418e2c323a2fe7ec2a4d5044a42b863691c6b2",
+        "mode": "644"
+      },
+      {
         "path": "Contents/Info.plist",
-        "url": "updates/1.5.8/Contents/Info.plist",
-        "sha256": "c33ad778a7b9caa9490185a9459a2c53066e0dd89283aec96e611387df85b424",
+        "url": "updates/1.5.9/Contents/Info.plist",
+        "sha256": "e87ced1dc89cc9ddd7085eab11c0abe12080bb37f1d81270a424198c8167cbbb",
         "mode": "644"
       }
     ]
