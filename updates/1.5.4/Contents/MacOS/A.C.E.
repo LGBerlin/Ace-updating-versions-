@@ -1,0 +1,93 @@
+#!/bin/bash
+set -u
+APP_DIR="$(cd "$(dirname "$0")/../.." && pwd -P)"
+TARGET_APP="/Applications/A.C.E.app"
+STATE_DIR="$HOME/Library/Application Support/A.C.E."
+PIDFILE="$STATE_DIR/ace-server.pid"
+LOGDIR="$HOME/Library/Logs"
+LOG="$LOGDIR/ACE.log"
+mkdir -p "$STATE_DIR" "$LOGDIR"
+
+cleanup_old_backend() {
+  if [ -f "$PIDFILE" ]; then
+    OLD_PID="$(cat "$PIDFILE" 2>/dev/null || true)"
+    if [ -n "$OLD_PID" ] && kill -0 "$OLD_PID" 2>/dev/null; then
+      OLD_CMD="$(ps -p "$OLD_PID" -o command= 2>/dev/null || true)"
+      case "$OLD_CMD" in
+        *"ACE Server.py"*|*"ACE Bootstrap.py"*)
+          kill "$OLD_PID" 2>/dev/null || true
+          for _i in 1 2 3 4 5 6 7 8; do
+            kill -0 "$OLD_PID" 2>/dev/null || break
+            sleep 0.15
+          done
+          kill -0 "$OLD_PID" 2>/dev/null && kill -9 "$OLD_PID" 2>/dev/null || true
+          ;;
+      esac
+    fi
+    rm -f "$PIDFILE"
+  fi
+}
+
+# v1.5 installs itself once into /Applications and from then on that installed
+# copy is the permanent A.C.E. app. This prevents macOS App Translocation and
+# makes later in-app replacements predictable.
+if [ "$APP_DIR" != "$TARGET_APP" ]; then
+  cleanup_old_backend
+  STAGE="/Applications/.A.C.E.app.installing.$$"
+  BACKUP="/Applications/.A.C.E.app.previous.$$"
+  rm -rf "$STAGE" "$BACKUP" 2>/dev/null || true
+  if /usr/bin/ditto "$APP_DIR" "$STAGE" 2>/dev/null; then
+    /bin/chmod +x "$STAGE/Contents/MacOS/A.C.E." 2>/dev/null || true
+    /usr/bin/xattr -dr com.apple.quarantine "$STAGE" >/dev/null 2>&1 || true
+    [ -d "$TARGET_APP" ] && /bin/mv "$TARGET_APP" "$BACKUP" 2>/dev/null || true
+    if /bin/mv "$STAGE" "$TARGET_APP" 2>/dev/null; then
+      rm -rf "$BACKUP" 2>/dev/null || true
+      /usr/bin/open -n "$TARGET_APP"
+      exit 0
+    fi
+    [ -d "$BACKUP" ] && /bin/mv "$BACKUP" "$TARGET_APP" 2>/dev/null || true
+  fi
+  /usr/bin/osascript -e 'display dialog "A.C.E. could not install itself in Applications. Drag A.C.E.app into Applications once, then open it there. Future updates will be handled by A.C.E." buttons {"OK"} default button "OK" with icon caution' >/dev/null 2>&1 || true
+  exit 1
+fi
+
+RES="$APP_DIR/Contents/Resources"
+cleanup_old_backend
+{
+  echo ""
+  echo "===== A.C.E. launch $(date) ====="
+  echo "Installed app: $APP_DIR"
+  echo "Resources: $RES"
+} >> "$LOG"
+
+PY=""
+IS_ARM_HW="$(/usr/sbin/sysctl -n hw.optional.arm64 2>/dev/null || echo 0)"
+CANDIDATES=(/opt/homebrew/bin/python3 /Library/Frameworks/Python.framework/Versions/Current/bin/python3 /usr/bin/python3 /usr/local/bin/python3)
+if [ "$IS_ARM_HW" = "1" ]; then
+  for C in "${CANDIDATES[@]}"; do
+    [ -x "$C" ] || continue
+    A="$($C -c 'import platform; print(platform.machine())' 2>/dev/null || true)"
+    if [ "$A" = "arm64" ]; then PY="$C"; break; fi
+  done
+fi
+if [ -z "$PY" ]; then
+  for C in "${CANDIDATES[@]}"; do [ -x "$C" ] && PY="$C" && break; done
+fi
+[ -z "$PY" ] && PY="$(command -v python3 2>/dev/null || true)"
+if [ -z "$PY" ]; then
+  /usr/bin/osascript -e 'display dialog "A.C.E. needs Python 3 on this Mac. Install Python 3 and reopen A.C.E." buttons {"OK"} default button "OK" with icon stop' >/dev/null 2>&1 || true
+  exit 1
+fi
+
+echo "Python: $PY ($($PY -c 'import platform; print(platform.machine())' 2>/dev/null || echo unknown))" >> "$LOG"
+/usr/bin/nohup "$PY" "$RES/ACE Bootstrap.py" >> "$LOG" 2>&1 </dev/null &
+NEW_PID=$!
+echo "$NEW_PID" > "$PIDFILE"
+echo "A.C.E. backend launched as PID $NEW_PID" >> "$LOG"
+sleep 0.35
+if ! kill -0 "$NEW_PID" 2>/dev/null; then
+  rm -f "$PIDFILE"
+  /usr/bin/osascript -e 'display dialog "A.C.E. stopped because its local backend failed. The error has been written to ~/Library/Logs/ACE.log." buttons {"OK"} default button "OK" with icon stop' >/dev/null 2>&1 || true
+  exit 1
+fi
+exit 0
