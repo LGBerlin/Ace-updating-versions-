@@ -1,6 +1,6 @@
 {
-  "version": "1.5.9",
-  "notes": "Restores and upgrades live web research across A.C.E. Factual questions, game questions, school/research questions, and factual posters/presentations now trigger multi-source research before A.C.E. answers or builds. Google is attempted first, with Bing and DuckDuckGo as additional/fallback discovery engines; A.C.E. then opens several distinct result pages, cross-checks the evidence, prefers primary/official sources, and avoids pretending it verified facts when live research fails. This package upgrades from A.C.E. 1.5.8 and preserves the corrected Preview Edit fix.",
+  "version": "1.6.0",
+  "notes": "Core reliability release. Fixes the Preview Edit popup/infinite-loop path by replacing stacked alert/clone handlers with one deterministic editor route. Web research is faster and broader: Google, Bing and DuckDuckGo discovery stays parallel, Bing redirect results are now decoded correctly, source pages are fetched concurrently under strict time budgets, slow workers no longer hold the answer open, and Stop can cancel research. All 1.5.8 and 1.5.9 behavior is carried forward cumulatively.",
   "patch": {
     "base": "1.5.8",
     "files": [
@@ -17,15 +17,21 @@
         "mode": "644"
       },
       {
-        "path": "Contents/Resources/ACE Bootstrap.py",
+        "path": "Contents/Resources/ACE Base 1.5.9.py",
         "url": "updates/1.5.9/Contents/Resources/ACE%20Bootstrap%201.5.9%20web.py",
         "sha256": "5b645f5f53bfab02dc874a68d1418e2c323a2fe7ec2a4d5044a42b863691c6b2",
         "mode": "644"
       },
       {
+        "path": "Contents/Resources/ACE Bootstrap.py",
+        "url": "updates/1.6.0/Contents/Resources/ACE%20Bootstrap%201.6.0%20core.py",
+        "sha256": "3def95d0f6604969cbf6d5a2638127a1ffd31ad83f15551697a4b9aa7c0b7f33",
+        "mode": "644"
+      },
+      {
         "path": "Contents/Info.plist",
-        "url": "updates/1.5.9/Contents/Info.plist",
-        "sha256": "e87ced1dc89cc9ddd7085eab11c0abe12080bb37f1d81270a424198c8167cbbb",
+        "url": "updates/1.6.0/Contents/Info.plist",
+        "sha256": "b42d27c2fea8de8f309ae2f9b5870698ebe2b907f02ca12a1cacc39079aa6e76",
         "mode": "644"
       }
     ]
