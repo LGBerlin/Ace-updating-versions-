@@ -1,19 +1,19 @@
 {
-  "version": "1.5.5",
-  "notes": "Adds a cancel-and-close control for Artifact Preview, a global Stop A.C.E. control that stops speech/current chat work/OpenDesign generation, hover Edit/Delete controls under user messages, and simple Preview zoom from 10% to 200% in 10% steps.",
+  "version": "1.5.6",
+  "notes": "Adds a ChatGPT-style Stop control in the composer that cuts off A.C.E. speech and current work, and replaces the broken Preview Edit behavior with a real PPTX-backed poster editor for moving objects and rewriting text before Download/Export.",
   "patch": {
-    "base": "1.5.4",
+    "base": "1.5.5",
     "files": [
       {
         "path": "Contents/Resources/ACE Bootstrap.py",
-        "url": "updates/1.5.5/Contents/Resources/ACE%20Bootstrap.py",
-        "sha256": "eb617e1de7586d9c00af396aecbe87486c0f9fba3279e6fcc6f2c424a2d5b085",
+        "url": "updates/1.5.6/Contents/Resources/ACE%20Bootstrap%20final.py",
+        "sha256": "2a1fdceddaa2b6cf703d0ed4480423dd878b31bdde1554d37cb08846922135de",
         "mode": "644"
       },
       {
         "path": "Contents/Info.plist",
-        "url": "updates/1.5.5/Contents/Info.plist",
-        "sha256": "9ba2b999a876b2db919b7d6abf6488a9372761cfd93e33a0dbb7df38dc2cf484",
+        "url": "updates/1.5.6/Contents/Info.plist",
+        "sha256": "716291ed5c1c677965176e45110323b820244aa8d0b4addbdbb3af0501cb858e",
         "mode": "644"
       }
     ]
