@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""A.C.E. 1.5.8 cumulative bridge for direct upgrade from 1.5.6.
+"""A.C.E. 1.5.8 bridge for upgrade from 1.5.7.
 
-Loads the bundled 1.5.7 runtime first (which applies the intent-first chat update and
-carries forward 1.5.6 Stop/Preview services), then applies the 1.5.8 poster Edit fix.
+Loads the bundled 1.5.7 runtime first, preserving the intent-first chat update and
+1.5.6 Stop/Preview services, then applies the 1.5.8 poster Preview Edit fix.
 """
 from pathlib import Path
 import importlib.util
@@ -32,10 +32,7 @@ def patch(path, marker, transform):
 def idx158(s):
     s = s.replace('app.css?v=157-intent', 'app.css?v=158-editfix')
     s = s.replace('app.js?v=157-intent', 'app.js?v=158-editfix')
-    s = s.replace('app.css?v=156-editor', 'app.css?v=158-editfix')
-    s = s.replace('app.js?v=156-editor', 'app.js?v=158-editfix')
     s = s.replace('Current version: v1.5.7', 'Current version: v1.5.8')
-    s = s.replace('Current version: v1.5.6', 'Current version: v1.5.8')
     return s + '\n<!--ACE158-->\n'
 
 
@@ -44,12 +41,12 @@ JS158 = r'''
   if(window.__ACE158_EDIT_FIX__)return;window.__ACE158_EDIT_FIX__=1;
   function root158(){return document.getElementById('artifactStudio')||document.querySelector('.artifact-studio')||document.body;}
   function isEdit158(el){try{const t=((el.textContent||'')+' '+(el.title||'')+' '+(el.getAttribute('aria-label')||'')).toLowerCase();return /\bedit\b/.test(t);}catch(_){return false;}}
-  function canEdit158(){try{return typeof studioJob!=='undefined'&&studioJob&&studioJob.job_id&&typeof window.acePosterEdit156==='function';}catch(_){return false;}}
+  function canEdit158(){try{return typeof studioJob!=='undefined'&&studioJob&&studioJob.job_id&&typeof window.aceOpenStudioEditor156==='function';}catch(_){return false;}}
   function legacy158(msg){return String(msg||'').toLowerCase().includes('direct layout editing is available for presentation slides in this version');}
   if(!window.__ACE158_ORIG_ALERT__){
     window.__ACE158_ORIG_ALERT__=window.alert;
     window.alert=function(msg){
-      if(legacy158(msg)&&canEdit158()){try{window.acePosterEdit156();}catch(_){}return;}
+      if(legacy158(msg)&&canEdit158()){try{window.aceOpenStudioEditor156();}catch(_){}return;}
       return window.__ACE158_ORIG_ALERT__.call(window,msg);
     };
   }
@@ -60,7 +57,7 @@ JS158 = r'''
       const b=old.cloneNode(true);b.dataset.ace158='1';
       b.addEventListener('click',e=>{
         e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();
-        if(canEdit158()){window.acePosterEdit156();return false;}
+        if(canEdit158()){window.aceOpenStudioEditor156();return false;}
         window.__ACE158_ORIG_ALERT__.call(window,'The poster preview is not ready yet.');return false;
       },true);
       old.replaceWith(b);
@@ -71,7 +68,6 @@ JS158 = r'''
 })();
 // ACE158
 '''
-
 
 patch(H / 'index.html', 'ACE158', idx158)
 patch(H / 'app.css', 'ACE158', lambda s: s + '\n/*ACE158*/\n')
