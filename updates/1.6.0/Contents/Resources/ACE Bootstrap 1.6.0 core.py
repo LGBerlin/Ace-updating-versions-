@@ -120,6 +120,8 @@ def _discover_160(query, max_urls=16):
                 continue
             if not host:
                 continue
+            # Prefer domain diversity, while still allowing a second result from a strong host
+            # when discovery is sparse.
             if host in seen_hosts and len(out) >= 7:
                 continue
             seen_urls.add(u)
@@ -299,6 +301,8 @@ JS160 = r'''
     }catch(err){toast((err&&err.message)||'Could not open the poster editor.',true);}
     finally{setTimeout(()=>{S.busy=false;},300);}
   }
+  // Window capture runs before the older document-level 1.5.6 handler. This makes one
+  // component solely responsible for Edit and prevents stacked handlers/alert loops.
   window.addEventListener('click',e=>{
     const b=e.target&&e.target.closest&&e.target.closest('button,a,[role="button"]');
     const r=studio();if(!b||!r||!r.contains(b)||!isEditButton(b))return;
@@ -311,6 +315,8 @@ JS160 = r'''
 
 
 def _app_160(s):
+    # Remove the 1.5.8 cloning/alert shim. Its document/window side effects are the source
+    # of stacked Edit routing. Keep the marker so the 1.5.8 bridge will not add it again.
     s = re.sub(
         r'\n\(function\(\)\{\n\s*if\(window\.__ACE158_EDIT_FIX_FINAL__\)[\s\S]*?\n\}\)\(\);\n// ACE158_FINAL\n',
         '\n', s, count=1)
