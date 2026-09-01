@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A.C.E. — Academic Concept Expert</title>
+<link rel="stylesheet" href="app.css?v=151-preview">
+</head>
+<body>
+<div class="app-shell">
+  <header class="topbar">
+    <div class="brand-wrap">
+      <div class="core" aria-hidden="true"><span></span></div>
+      <div>
+        <div class="brand">A.C.E.</div>
+        <div class="brand-expansion">Academic Concept Expert</div>
+        <div class="status" id="statusLine">Starting systems…</div>
+      </div>
+    </div>
+    <button class="voice-chip" id="voiceChip" title="Configure A.C.E. voice">VOICE: SYSTEM</button>
+    <button class="update-chip hidden" id="updateChip" title="A.C.E. update available">UPDATE</button>
+    <nav class="tabs" aria-label="A.C.E. modes">
+      <button class="tab active" data-view="chat">Chat</button>
+      <button class="tab" data-view="live">Live</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="view active" id="view-chat">
+      <div class="chat-workspace" id="chatWorkspace">
+        <div class="chat-column">
+          <div id="setupBanner" class="setup-banner hidden"></div>
+          <div class="chat-log" id="chatLog"></div>
+          <div class="composer-wrap">
+            <div class="composer">
+              <textarea id="chatInput" rows="2" placeholder="Ask A.C.E. anything…"></textarea>
+              <button class="primary send" id="sendBtn">Send</button>
+            </div>
+            <div class="hint">A.C.E. automatically researches the web when needed. Posters and presentations open in Artifact Preview. Enter sends · Shift+Enter adds a line.</div>
+          </div>
+        </div>
+        <aside class="artifact-studio hidden" id="artifactStudio" aria-label="Artifact preview">
+          <div class="studio-toolbar">
+            <button class="studio-icon" id="studioRefresh" title="Refresh preview">↻</button>
+            <div class="studio-segment">
+              <button class="studio-mode active" id="studioPreviewMode">◉ <span>Preview</span></button>
+              <button class="studio-mode" id="studioCodeMode">&lt;/&gt; <span>Code</span></button>
+            </div>
+            <div class="studio-device" id="studioCanvasLabel">▣ Presentation 16:9</div>
+            <div class="studio-spacer"></div>
+            <button class="studio-icon" id="studioSnapshot" title="Save current preview image">▣</button>
+            <button class="studio-icon" id="studioComment" title="Comment on the current slide">▢+</button>
+            <button class="studio-regenerate disabled" id="studioRegenerate" title="Regenerate using your comments">Regenerate</button>
+            <button class="studio-icon" id="studioEdit" title="Move elements in the current slide">✎</button>
+            <button class="studio-icon" id="studioExpand" title="Open preview in a new window">↗</button>
+            <div class="studio-zoom-simple" aria-label="Preview zoom">
+              <button class="studio-zoom-btn" id="studioZoomOut" title="Zoom out">−</button>
+              <span id="studioZoomLabel">100%</span>
+              <button class="studio-zoom-btn" id="studioZoomIn" title="Zoom in">+</button>
+            </div>
+            <a class="studio-download disabled" id="studioDownload" href="#">Download</a>
+          </div>
+          <div class="studio-comments hidden" id="studioComments">
+            <div class="studio-comments-head"><strong id="studioCommentLabel">Slide 1 comment</strong><button id="studioCommentClear" type="button">Clear</button></div>
+            <textarea id="studioCommentText" rows="3" placeholder="What should A.C.E. change on this slide?"></textarea>
+            <div class="studio-comments-hint">Add comments to any slides, then click Regenerate. A.C.E. will update the same OpenDesign project using all of your comments.</div>
+          </div>
+          <div class="studio-stage" id="studioStage">
+            <div class="studio-empty" id="studioEmpty"><div class="studio-spinner"></div><div id="studioStageText">Waiting for artifact…</div></div>
+            <div class="studio-viewport hidden" id="studioViewport"><iframe id="studioFrame" title="A.C.E. artifact preview"></iframe><img class="studio-final-image hidden" id="studioImage" alt="Rendered PowerPoint preview"></div>
+            <pre class="studio-code hidden" id="studioCode"></pre>
+          </div>
+          <div class="studio-footer">
+            <div class="studio-progress"><span id="studioStatus">OpenDesign + Codex</span></div>
+            <div class="studio-nav" id="studioNav"><button id="studioPrev">←</button><span id="studioPage">Preview</span><button id="studioNext">→</button></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="view" id="view-live">
+      <div class="live-shell">
+        <div class="live-left">
+          <div class="eyebrow">LIVE CONVERSATION</div>
+          <div class="live-orb" id="liveOrb"><div class="orb-ring one"></div><div class="orb-ring two"></div><div class="orb-core"></div></div>
+          <div class="live-status" id="liveStatus">Ready</div>
+          <div class="live-caption" id="liveCaption">Press Start and speak naturally.</div>
+          <div class="live-actions">
+            <button class="primary" id="liveToggleBtn">Start Live</button>
+            <button class="secondary" id="liveMuteBtn">Voice On</button>
+          </div>
+          <textarea id="liveTypeInput" rows="2" placeholder="…or type here"></textarea>
+        </div>
+        <div class="live-right">
+          <div class="eyebrow">RECENT CONVERSATION</div>
+          <div id="liveRecent" class="live-recent"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="update-modal hidden" id="updateModal" aria-hidden="true">
+  <div class="update-dialog">
+    <div class="update-head"><div><div class="eyebrow">A.C.E. UPDATE</div><h2>Keep A.C.E. current</h2></div><button class="modal-close" id="updateClose" aria-label="Close">×</button></div>
+    <div class="update-current" id="updateCurrent">Current version: v1.5.4</div>
+    <div class="update-message" id="updateMessage">Checking for updates…</div>
+    <div class="update-notes hidden" id="updateNotes"></div>
+    <div class="update-actions"><button class="secondary" id="updateCheckBtn">Check Now</button><button class="primary hidden" id="updateInstallBtn">Update A.C.E.</button></div>
+    <div class="update-channel">
+      <div class="update-channel-title">Automatic update source</div>
+      <div class="update-channel-row"><input id="updateRepoInput" type="text" placeholder="GitHub repository — owner/repository" autocomplete="off"><button class="secondary" id="updateSaveSourceBtn">Save Source</button></div>
+      <div class="update-channel-status" id="updateChannelStatus">Official A.C.E. GitHub update feed connected.</div>
+    </div>
+    <div class="update-foot">A.C.E. is permanently connected to its official GitHub update feed. Future versions download and install from inside A.C.E.; the Downloads-folder method is only an emergency fallback.</div>
+  </div>
+</div>
+
+<div class="voice-modal hidden" id="voiceModal" aria-hidden="true">
+  <div class="voice-dialog">
+    <div class="voice-dialog-head"><div><div class="eyebrow">A.C.E. VOICE</div><h2>Voice Engine</h2></div><button class="modal-close" id="voiceClose" aria-label="Close">×</button></div>
+    <p class="voice-copy">A.C.E. prefers your local PocketTTS clone for fast, unlimited speech. Gemini remains available only as an optional fallback.</p>
+
+    <div class="voice-section-card">
+      <div class="voice-section-title">Local A.C.E. Voice · PocketTTS</div>
+      <div class="voice-connection" id="pocketConnection">Checking PocketTTS…</div>
+      <label class="voice-label" for="pocketVoiceFile">Voice sample</label>
+      <input id="pocketVoiceFile" class="voice-file" type="file" accept="audio/wav,audio/mpeg,audio/mp4,audio/flac,audio/ogg,.wav,.mp3,.m4a,.flac,.ogg">
+      <div class="voice-preview-row"><button class="primary" id="pocketBuildBtn">Build local A.C.E. voice</button><button class="secondary" id="pocketPreviewBtn">Test local voice</button></div>
+      <div class="voice-progress hidden" id="pocketProgress"><div></div></div>
+      <div class="voice-connection" id="pocketBuildStatus"></div>
+      <div class="voice-note">Choose the same clean Fish Audio sample you used to make the PocketTTS clone. A.C.E. converts it once into a fast reusable voice embedding.</div>
+      <div class="voice-note"><strong>Natural sentence flow:</strong> A.C.E. speaks at normal speed and buffers a short amount of audio before playback so complete sentences flow without artificial gaps every few words.</div>
+    </div>
+
+    <div class="voice-section-card secondary-card">
+      <div class="voice-section-title">Optional cloud fallback · Gemini</div>
+      <label class="voice-label">Gemini API key</label>
+      <div class="voice-key-row"><input id="geminiKeyInput" type="password" placeholder="Paste Gemini API key" autocomplete="off"><button class="secondary" id="geminiConnectBtn">Connect</button></div>
+      <div class="voice-progress hidden" id="voiceProgress"><div></div></div>
+      <div class="voice-connection" id="voiceConnection">Not connected</div>
+      <label class="voice-label" for="geminiVoiceSelect">Gemini voice</label>
+      <select id="geminiVoiceSelect"></select>
+      <div class="voice-preview-row"><button class="secondary" id="geminiPreviewBtn">Preview Gemini</button><button class="secondary danger-lite" id="geminiDisconnectBtn">Disconnect</button></div>
+      <div class="voice-note">Gemini is only used if PocketTTS is unavailable. The API key stays in your macOS Keychain.</div>
+    </div>
+  </div>
+</div>
+<script src="pptxgen.bundle.js"></script>
+<script src="app.js?v=151-preview"></script>
+</body>
+</html>
