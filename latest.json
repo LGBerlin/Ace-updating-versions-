@@ -1,31 +1,19 @@
 {
-  "version": "1.5.4",
-  "notes": "Fixes the poster Preview Studio getting stuck on Ready when OpenDesign finishes as PPTX-only. A.C.E. now retries the lightweight macOS preview handoff while leaving poster and presentation generation unchanged.",
+  "version": "1.5.5",
+  "notes": "Adds a cancel-and-close control for Artifact Preview, a global Stop A.C.E. control that stops speech/current chat work/OpenDesign generation, hover Edit/Delete controls under user messages, and simple Preview zoom from 10% to 200% in 10% steps.",
   "patch": {
-    "base": "1.5.3",
+    "base": "1.5.4",
     "files": [
       {
-        "path": "Contents/MacOS/A.C.E.",
-        "url": "updates/1.5.4/Contents/MacOS/A.C.E.",
-        "sha256": "1e30f7294fe958a499765ab334d555de9222cb0e4ffd932544da9e3dc6cb7e04",
-        "mode": "755"
-      },
-      {
         "path": "Contents/Resources/ACE Bootstrap.py",
-        "url": "updates/1.5.4/Contents/Resources/ACE%20Bootstrap.py",
-        "sha256": "a028971d0b97f1d9561825e25d00a0a8336fee0ba08ccb7317ef2b0c6e37ec69",
-        "mode": "644"
-      },
-      {
-        "path": "Contents/Resources/index.html",
-        "url": "updates/1.5.4/Contents/Resources/index.html",
-        "sha256": "d2f593dee115e65326cd66e90e14db80438a7ce6b3673890661fa7e8bfa5c615",
+        "url": "updates/1.5.5/Contents/Resources/ACE%20Bootstrap.py",
+        "sha256": "eb617e1de7586d9c00af396aecbe87486c0f9fba3279e6fcc6f2c424a2d5b085",
         "mode": "644"
       },
       {
         "path": "Contents/Info.plist",
-        "url": "updates/1.5.4/Contents/Info.plist",
-        "sha256": "44825d16d040d38a5711f21087af34dc2fedc09daf66e7d8ec02c95522164d5b",
+        "url": "updates/1.5.5/Contents/Info.plist",
+        "sha256": "9ba2b999a876b2db919b7d6abf6488a9372761cfd93e33a0dbb7df38dc2cf484",
         "mode": "644"
       }
     ]
