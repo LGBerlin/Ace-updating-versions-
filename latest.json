@@ -1,6 +1,6 @@
 {
-  "version": "1.6.1",
-  "notes": "Workspace/UI release. Adds the new dark-green A.C.E. left rail and slide-out workspace, quick new chat, persistent separate chats and chat history, projects with per-chat assignment, an AI Search entry point that routes through the existing multi-source research engine, ChatGPT-style local image/file attachment chips and image previews, and Live-mode cards showing the current chat/project/current work plus a slide-out artifact preview. The supplied reference images informed the navigation and attachment interactions while the existing A.C.E. logo/color language remains intact. Update, Voice, Stop, Chat/Live, artifact Preview/Edit, regeneration and downloads remain on the validated 1.6.0 runtime. Image attachments are stored/displayed locally in this release; model-side visual understanding is not claimed yet.",
+  "version": "1.6.2",
+  "notes": "Attachment-aware workspace release. Attached text/code files can now be passed to the local chat model as hidden context, and DOCX, PPTX and XLSX text is extracted locally with standard-library parsers. PDFs are extracted when a local pdftotext binary is available. Adds drag/drop and pasted-file support, compressed local image previews, attachment preparation/status feedback, and safer empty-prompt attachment sending. Image previews remain local only; pixel-level visual understanding is not claimed. The 1.6.1 chats/projects/sidebar/Live workspace, 1.6.0 deterministic Preview Edit fix and faster multi-source research, and all existing Update, Voice, Stop, Chat/Live, artifact preview, regeneration and download/export behavior remain cumulative.",
   "patch": {
     "base": "1.5.8",
     "files": [
@@ -29,15 +29,21 @@
         "mode": "644"
       },
       {
-        "path": "Contents/Resources/ACE Bootstrap.py",
+        "path": "Contents/Resources/ACE Base 1.6.1.py",
         "url": "updates/1.6.1/Contents/Resources/ACE%20Bootstrap%201.6.1%20workspace.py",
         "sha256": "d9c421ef1c4797e594f0797d68d5cd23bc2ca8a94ab8185bc75e643c380d5b1d",
         "mode": "644"
       },
       {
+        "path": "Contents/Resources/ACE Bootstrap.py",
+        "url": "updates/1.6.2/Contents/Resources/ACE%20Bootstrap%201.6.2%20attachments.py",
+        "sha256": "4560c481639aefeb40180101ef8bd6c48c06cde33afa67d5c98feeee78f1c5d7",
+        "mode": "644"
+      },
+      {
         "path": "Contents/Info.plist",
-        "url": "updates/1.6.1/Contents/Info.plist",
-        "sha256": "948646553faba95a63f41573f4c03751daa0c01f292d784a2f753cb8961f0b1c",
+        "url": "updates/1.6.2/Contents/Info.plist",
+        "sha256": "58feecfb62ba877f82325d29d7418fb38e733093e95fc621e80758a66b4ef9e9",
         "mode": "644"
       }
     ]
