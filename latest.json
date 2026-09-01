@@ -1,8 +1,8 @@
 {
   "version": "1.5.9",
-  "notes": "Restores and upgrades live web research across A.C.E. Factual questions, game questions, school/research questions, and factual posters/presentations now trigger multi-source research before A.C.E. answers or builds. Google is attempted first, with Bing and DuckDuckGo as additional/fallback discovery engines; A.C.E. then opens several distinct result pages, cross-checks the evidence, prefers primary/official sources, and avoids pretending it verified facts when live research fails.",
+  "notes": "Restores and upgrades live web research across A.C.E. Factual questions, game questions, school/research questions, and factual posters/presentations now trigger multi-source research before A.C.E. answers or builds. Google is attempted first, with Bing and DuckDuckGo as additional/fallback discovery engines; A.C.E. then opens several distinct result pages, cross-checks the evidence, prefers primary/official sources, and avoids pretending it verified facts when live research fails. This package is cumulative and can upgrade directly from 1.5.7, carrying the corrected 1.5.8 Preview Edit fix with it.",
   "patch": {
-    "base": "1.5.8",
+    "base": "1.5.7",
     "files": [
       {
         "path": "Contents/Resources/ACE Base 1.5.7.py",
