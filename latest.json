@@ -1,19 +1,19 @@
 {
-  "version": "1.5.7",
-  "notes": "Adds an intent-first chat gate so examples, mentions and behaviour/style feedback stay in normal chat unless the user clearly asks for an artifact, and makes ordinary A.C.E. replies more natural, casual and concise without adding a second model pass.",
+  "version": "1.5.8",
+  "notes": "Fixes the poster Preview Edit infinite loop by routing the Edit button straight into the PPTX-backed poster editor instead of the old presentation-only popup, while keeping the 1.5.7 intent-first chat behaviour and natural reply improvements.",
   "patch": {
-    "base": "1.5.6",
+    "base": "1.5.7",
     "files": [
       {
         "path": "Contents/Resources/ACE Bootstrap.py",
-        "url": "updates/1.5.7/Contents/Resources/ACE%20Bootstrap.py",
-        "sha256": "9d9899d95a7804c7449534fb3ebf3730eece5715c70beafd145552158615d1ac",
+        "url": "updates/1.5.8/Contents/Resources/ACE%20Bootstrap.py",
+        "sha256": "0934a94697af3b7dcc3992d0b30fe2ce5ff11e8925fa7f9a1b6ce0192d8a5310",
         "mode": "644"
       },
       {
         "path": "Contents/Info.plist",
-        "url": "updates/1.5.7/Contents/Info.plist",
-        "sha256": "fcee645dea57ed3fe56b7ae13b4952a49a2be62636af110e8d5a84f8547425fc",
+        "url": "updates/1.5.8/Contents/Info.plist",
+        "sha256": "c33ad778a7b9caa9490185a9459a2c53066e0dd89283aec96e611387df85b424",
         "mode": "644"
       }
     ]
