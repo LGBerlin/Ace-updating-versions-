@@ -1,6 +1,6 @@
 {
   "version": "1.5.8",
-  "notes": "Fixes the poster Preview Edit infinite loop by routing Edit directly into the PPTX-backed poster editor, while preserving the 1.5.7 intent-first chat improvements. This corrected package also includes the 1.5.7 runtime as an internal dependency so the 1.5.8 bootstrap passes integrity checks and launches reliably.",
+  "notes": "Fixes the poster Preview Edit infinite loop by routing Edit directly into the real PPTX-backed poster editor, while preserving the 1.5.7 intent-first chat improvements. The corrected package includes the 1.5.7 runtime as an internal dependency and uses matching integrity hashes for every downloaded file.",
   "patch": {
     "base": "1.5.7",
     "files": [
@@ -13,7 +13,7 @@
       {
         "path": "Contents/Resources/ACE Bootstrap.py",
         "url": "updates/1.5.8/Contents/Resources/ACE%20Bootstrap.py",
-        "sha256": "4668c7d26db91f068553edb5bb02cf87037b34672fd41c7263d3266e4dd016a0",
+        "sha256": "26be118825c5bda73f7a84f85d3f4eeaad0ada0992e84b9cedd2c2e7315b0427",
         "mode": "644"
       },
       {
