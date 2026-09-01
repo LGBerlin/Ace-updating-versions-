@@ -1,7 +1,33 @@
 {
-  "version": "1.5.3",
-  "notes": "A.C.E. v1.5.3 establishes the permanent GitHub update channel and patch-based updater. Future versions will be published directly to this repository and installed from inside A.C.E.",
-  "sha256": "cedd44d9d4b4b20d32ecbb0f836a604dab858b6071f75f630065fccb38fb2ba1",
-  "size": 9140732,
-  "chunks": []
+  "version": "1.5.4",
+  "notes": "Fixes the poster Preview Studio getting stuck on Ready when OpenDesign finishes as PPTX-only. A.C.E. now retries the lightweight macOS preview handoff while leaving poster and presentation generation unchanged.",
+  "patch": {
+    "base": "1.5.3",
+    "files": [
+      {
+        "path": "Contents/MacOS/A.C.E.",
+        "url": "updates/1.5.4/Contents/MacOS/A.C.E.",
+        "sha256": "1e30f7294fe958a499765ab334d555de9222cb0e4ffd932544da9e3dc6cb7e04",
+        "mode": "755"
+      },
+      {
+        "path": "Contents/Resources/ACE Bootstrap.py",
+        "url": "updates/1.5.4/Contents/Resources/ACE%20Bootstrap.py",
+        "sha256": "a028971d0b97f1d9561825e25d00a0a8336fee0ba08ccb7317ef2b0c6e37ec69",
+        "mode": "644"
+      },
+      {
+        "path": "Contents/Resources/index.html",
+        "url": "updates/1.5.4/Contents/Resources/index.html",
+        "sha256": "d2f593dee115e65326cd66e90e14db80438a7ce6b3673890661fa7e8bfa5c615",
+        "mode": "644"
+      },
+      {
+        "path": "Contents/Info.plist",
+        "url": "updates/1.5.4/Contents/Info.plist",
+        "sha256": "44825d16d040d38a5711f21087af34dc2fedc09daf66e7d8ec02c95522164d5b",
+        "mode": "644"
+      }
+    ]
+  }
 }
