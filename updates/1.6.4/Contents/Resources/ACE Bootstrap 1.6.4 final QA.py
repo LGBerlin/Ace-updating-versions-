@@ -163,7 +163,7 @@ JS164 = r'''
   document.addEventListener('visibilitychange',()=>{if(document.hidden)endResize();});
   window.addEventListener('resize',()=>{endResize();clampPreview();},{passive:true});
 
-  const refresh=()=>{try{bindPasteGuard();queueIsSafe();clampPreview();}catch(_){};
+  const refresh=()=>{try{bindPasteGuard();queueIsSafe();clampPreview();}catch(_){ }};
   setTimeout(refresh,120);
   setInterval(refresh,1600);
 })();
