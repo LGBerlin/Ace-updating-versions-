@@ -1,0 +1,58 @@
+name: ACE Stabilization Inspect
+on:
+  push:
+    paths:
+      - '.github/workflows/ace-stabilize-inspect.yml'
+  workflow_dispatch:
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect cumulative update chain
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re,base64,zlib,ast
+          print('=== FILES ===')
+          for p in sorted(Path('updates').rglob('*.py')):
+              print(p)
+          print('\n=== VOICE / UPDATE / ROUTES IN SOURCE ===')
+          for p in sorted(Path('updates').rglob('*.py')):
+              s=p.read_text(errors='replace')
+              hits=[]
+              for i,line in enumerate(s.splitlines(),1):
+                  if re.search(r'voice|update|/api/|tts|pocket',line,re.I):
+                      hits.append((i,line[:700]))
+              if hits:
+                  print('\n###',p)
+                  for i,line in hits[:140]: print(f'{i}: {line}')
+          print('\n=== DECOMPRESSED JS/CSS 1.7.1 AUDIT ===')
+          p=Path('updates/1.7.1/Contents/Resources/ACE Bootstrap 1.7.1 clean shell.py')
+          src=p.read_text()
+          def dec(name):
+              m=re.search(name+r"=zlib\.decompress\(base64\.b64decode\('([^']+)'\)\)\.decode\('utf-8'\)",src)
+              return zlib.decompress(base64.b64decode(m.group(1))).decode() if m else ''
+          css,js=dec('CSS171'),dec('JS171')
+          print('CSS_LEN',len(css),'JS_LEN',len(js))
+          print('\n-- JS lines containing voice/update/action --')
+          for i,line in enumerate(js.splitlines(),1):
+              if re.search(r'voice|update|action|fetch\(|/api/',line,re.I): print(f'{i}: {line[:1000]}')
+          print('\n-- CSS potential blue/teal tokens --')
+          # Flag named blues/cyans, blue-ish hex, and rgba with B materially > G/R.
+          for i,line in enumerate(css.splitlines(),1):
+              bad=False
+              if re.search(r'blue|cyan|teal|aqua',line,re.I): bad=True
+              for hx in re.findall(r'#[0-9a-fA-F]{6}',line):
+                  r,g,b=(int(hx[j:j+2],16) for j in (1,3,5))
+                  if b>g+18 and b>r+18: bad=True
+              for m in re.finditer(r'rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)',line):
+                  r,g,b=map(int,m.groups())
+                  if b>g+18 and b>r+18: bad=True
+              if bad: print(f'{i}: {line[:1000]}')
+          print('\n-- all 1.7.1 CSS colors --')
+          colors=sorted(set(re.findall(r'#[0-9a-fA-F]{3,8}|rgba?\([^\)]*\)',css)))
+          for c in colors: print(c)
+          PY
