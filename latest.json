@@ -1,6 +1,6 @@
 {
-  "version": "1.6.5",
-  "notes": "Adds real chat attachments while preserving the complete 1.6.4 A.C.E. runtime. Attach PNG/JPG/WebP/GIF images and Word, PowerPoint, PDF, Excel, text and related files by picker, drag/drop or paste. DOCX/PPTX/XLSX and text-bearing files are extracted locally; DOC/RTF use macOS textutil; PDFs use pdftotext when present with a macOS PDFKit fallback. Images are analyzed locally through the active Ollama vision-capable model before the normal A.C.E. response. Attachment state remains scoped to the originating chat. Existing posters, presentations, Preview/Edit, Live preview side panel, downloads/exports, Voice/Pocket TTS, Stop, Chat/Live, projects/history, AI Search and multi-source research are retained from 1.6.4. Release files were syntax-checked and SHA-256 verified from a fresh GitHub checkout. Final hardware/runtime behavior still requires a click-through test on the user's Mac.",
+  "version": "1.7.0",
+  "notes": "Major A.C.E. interface redesign using the approved dark-green/lime reference scheme while preserving the complete 1.6.5 runtime. Rebuilds the visible top status bar, slim left command rail, Chat presentation and Live workspace. Adds the reference-style Live dashboard with Current Chat, Project and Working On cards, Recent Conversation, Currently Working On artifact card and progress state, prominent Preview access, Start Live and Voice controls, and a typed Live input. Adds consolidated access to New Chat, AI Search, History, Projects, Preview, attachments and command actions without removing existing capabilities. Chat keeps the bottom + attachment composer, Send, assistant actions, posters, presentations, Preview/Edit, Live preview side panel, downloads/exports, Voice/Pocket TTS, Stop, projects/history, attachments with local document extraction and image vision, chat persistence and multi-source web research. The release is cumulative from 1.6.4 so the 1.6.5 attachment layer is included even if 1.6.5 was not separately installed. Python, decompressed JavaScript, release structure and exact SHA-256s were validated from fresh GitHub checkouts. Final visual and hardware interaction checks remain to be performed on the user's Mac after installation.",
   "patch": {
     "base": "1.6.4",
     "files": [
@@ -11,15 +11,21 @@
         "mode": "644"
       },
       {
-        "path": "Contents/Resources/ACE Bootstrap.py",
+        "path": "Contents/Resources/ACE Base 1.6.5.py",
         "url": "updates/1.6.5/Contents/Resources/ACE%20Bootstrap%201.6.5%20attachments.py",
         "sha256": "05080748a60577087bb3f690e7fe8a07178ce50d876a5736a51eb093fccbc91a",
         "mode": "644"
       },
       {
+        "path": "Contents/Resources/ACE Bootstrap.py",
+        "url": "updates/1.7.0/Contents/Resources/ACE%20Bootstrap%201.7.0%20command%20center.py",
+        "sha256": "8d8fbb10a85593c669365a0944ef08b59a90b5fa155511056f8b45c42d88600b",
+        "mode": "644"
+      },
+      {
         "path": "Contents/Info.plist",
-        "url": "updates/1.6.5/Contents/Info.plist",
-        "sha256": "b1b462dc72d0ee64de6749c5e8b603869cb8b7e577293d458ef45adb01e6e716",
+        "url": "updates/1.7.0/Contents/Info.plist",
+        "sha256": "1b487bdac56d311814101512f439688575cc4fb5a732ab4c66f6108c2b0911c6",
         "mode": "644"
       }
     ]
