@@ -1,6 +1,6 @@
 {
-  "version": "1.6.3",
-  "notes": "Workspace ergonomics and Live preview polish. Adds a keyboard-first command palette (Cmd/Ctrl+K), reliable shortcuts for New Chat, AI Search, Live mode and composer focus, a persistent resizable Live preview drawer, and safer clearing of pending attachment context when navigating between chats/projects/search. The 1.6.2 attachment-aware context and local document extraction, 1.6.1 chats/projects/sidebar/Live workspace, 1.6.0 deterministic Preview Edit fix and faster multi-source research, and all existing Update, Voice, Stop, Chat/Live, artifact preview/Edit, regeneration and download/export behavior remain cumulative.",
+  "version": "1.6.4",
+  "notes": "Final overnight reliability pass. Hardens attachment-context scoping across chat/project navigation, prevents clipboard file/image pastes from also inserting unwanted text into the composer, and makes the Live preview resizer recover cleanly from pointer cancellation/window blur and clamp after window resize. The 1.6.3 command palette and Live preview ergonomics, 1.6.2 attachment-aware context and local document extraction, 1.6.1 chats/projects/sidebar/Live workspace, 1.6.0 deterministic Preview Edit fix and faster multi-source research, and all existing Update, Voice, Stop, Chat/Live, artifact preview/Edit, regeneration and download/export behavior remain cumulative.",
   "patch": {
     "base": "1.5.8",
     "files": [
@@ -41,15 +41,21 @@
         "mode": "644"
       },
       {
-        "path": "Contents/Resources/ACE Bootstrap.py",
+        "path": "Contents/Resources/ACE Base 1.6.3.py",
         "url": "updates/1.6.3/Contents/Resources/ACE%20Bootstrap%201.6.3%20workspace%20polish.py",
         "sha256": "2627a77621ef72ee369366fd59a761f93a1fe19605710c804c84a7eb470a1e0d",
         "mode": "644"
       },
       {
+        "path": "Contents/Resources/ACE Bootstrap.py",
+        "url": "updates/1.6.4/Contents/Resources/ACE%20Bootstrap%201.6.4%20final%20QA.py",
+        "sha256": "5eb1f335bc2fc17c7710a0cb444ef798483dfc97aed4dc3cf2ed89f36e840c7a",
+        "mode": "644"
+      },
+      {
         "path": "Contents/Info.plist",
-        "url": "updates/1.6.3/Contents/Info.plist",
-        "sha256": "8183f6d20af5b457215fabfe42dec8807ff2a31889e2e6551764e9e8339ae942",
+        "url": "updates/1.6.4/Contents/Info.plist",
+        "sha256": "b9b2c353db30012ce583c63a2ab7f6a373df07755a5d285cb8738a6dc848ad56",
         "mode": "644"
       }
     ]
