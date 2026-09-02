@@ -11,6 +11,7 @@ on the cumulative runtime.
 """
 from pathlib import Path
 import importlib.util
+import re
 
 H = Path(__file__).resolve().parent
 BASE = H / 'ACE Base 1.6.3.py'
@@ -55,11 +56,63 @@ CSS164 = r'''
 '''
 
 
+RESIZER163_FIXED = r'''  function bindPreviewResizer(){
+    const els=[...document.querySelectorAll('[id],[class]')];
+    const panel=els.find(e=>{
+      if(!visible(e))return false;
+      const key=(String(e.id||'')+' '+String(e.className||'')).toLowerCase();
+      return key.includes('ace161')&&key.includes('preview')&&e.getBoundingClientRect().width>220;
+    });
+    if(!panel||panel.dataset.ace163Resizable==='1')return;
+    panel.dataset.ace163Resizable='1';
+    const cs=getComputedStyle(panel);if(cs.position==='static')panel.style.position='relative';
+    const h=document.createElement('div');h.className='ace163-preview-resizer';h.setAttribute('role','separator');h.setAttribute('aria-orientation','vertical');h.title='Drag to resize Live preview · double-click to reset';
+    const rect=panel.getBoundingClientRect();
+    const onRight=rect.left>window.innerWidth/2;h.style[onRight?'left':'right']='0';
+    panel.appendChild(h);
+    try{const saved=Number(localStorage.getItem('ace163.livePreviewWidth')||0);if(saved>=320)panel.style.width=Math.min(saved,window.innerWidth*.72)+'px';}catch(_){ }
+    let state=null;
+    const save=()=>{try{localStorage.setItem('ace163.livePreviewWidth',String(Math.round(panel.getBoundingClientRect().width)));}catch(_){ }};
+    const finish=()=>{
+      if(!state)return;
+      const pid=state.pointerId;
+      window.removeEventListener('pointermove',move,true);
+      window.removeEventListener('pointerup',up,true);
+      window.removeEventListener('pointercancel',cancel,true);
+      window.removeEventListener('blur',cancel,true);
+      document.removeEventListener('visibilitychange',hidden,true);
+      try{if(h.hasPointerCapture&&h.hasPointerCapture(pid))h.releasePointerCapture(pid);}catch(_){ }
+      document.body.classList.remove('ace163-resizing-preview');h.dataset.dragging='0';
+      state=null;save();
+    };
+    const move=e=>{
+      if(!state||e.pointerId!==state.pointerId)return;
+      const dx=e.clientX-state.startX;const w=Math.max(320,Math.min(window.innerWidth*.72,state.startW+(onRight?-dx:dx)));
+      panel.style.width=Math.round(w)+'px';panel.style.maxWidth='72vw';panel.style.flexBasis=Math.round(w)+'px';
+    };
+    const up=e=>{if(!state||e.pointerId!==state.pointerId)return;finish();};
+    const cancel=()=>finish();
+    const hidden=()=>{if(document.hidden)finish();};
+    h.addEventListener('pointerdown',e=>{
+      if(state)finish();
+      e.preventDefault();
+      state={pointerId:e.pointerId,startX:e.clientX,startW:panel.getBoundingClientRect().width};
+      h.dataset.dragging='1';document.body.classList.add('ace163-resizing-preview');
+      try{h.setPointerCapture(e.pointerId);}catch(_){ }
+      window.addEventListener('pointermove',move,true);
+      window.addEventListener('pointerup',up,true);
+      window.addEventListener('pointercancel',cancel,true);
+      window.addEventListener('blur',cancel,true);
+      document.addEventListener('visibilitychange',hidden,true);
+    });
+    h.addEventListener('dblclick',()=>{if(state)finish();panel.style.width='';panel.style.maxWidth='';panel.style.flexBasis='';try{localStorage.removeItem('ace163.livePreviewWidth');}catch(_){ }});
+  }'''
+
+
 JS164 = r'''
 (function(){
   if(window.__ACE164_FINAL_QA__)return;
   window.__ACE164_FINAL_QA__=1;
-  const norm=s=>String(s||'').replace(/\s+/g,' ').trim().toLowerCase();
 
   function queue(){
     try{return window.__ACE162_ATTACHMENT_QUEUE__||null;}catch(_){return null;}
@@ -140,10 +193,6 @@ JS164 = r'''
     },true);
   }
 
-  function endResize(){
-    document.body.classList.remove('ace163-resizing-preview');
-    document.querySelectorAll('.ace163-preview-resizer[data-dragging="1"]').forEach(h=>h.dataset.dragging='0');
-  }
   function clampPreview(){
     const panel=document.querySelector('[data-ace163-resizable="1"]');
     if(!panel)return;
@@ -158,11 +207,7 @@ JS164 = r'''
     }
   }
 
-  window.addEventListener('pointercancel',endResize,true);
-  window.addEventListener('blur',endResize,true);
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)endResize();});
-  window.addEventListener('resize',()=>{endResize();clampPreview();},{passive:true});
-
+  window.addEventListener('resize',clampPreview,{passive:true});
   const refresh=()=>{try{bindPasteGuard();queueIsSafe();clampPreview();}catch(_){ }};
   setTimeout(refresh,120);
   setInterval(refresh,1600);
@@ -172,7 +217,12 @@ JS164 = r'''
 
 
 def app164(s):
-    return s + '\n' + JS164 + '\n// ACE164\n'
+    pattern = r"  function bindPreviewResizer\(\)\{[\s\S]*?\n  \}\n\n  document\.addEventListener\('keydown',e=>\{"
+    replacement = RESIZER163_FIXED + "\n\n  document.addEventListener('keydown',e=>{"
+    s2, count = re.subn(pattern, lambda _: replacement, s, count=1)
+    if count != 1:
+        return s
+    return s2 + '\n' + JS164 + '\n// ACE164\n'
 
 
 patch(H / 'index.html', 'ACE164_FINAL_QA', idx164)
