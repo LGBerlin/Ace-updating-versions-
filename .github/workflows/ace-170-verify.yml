@@ -1,0 +1,57 @@
+name: ACE 1.7.0 Verify
+on:
+  push:
+    paths:
+      - '.github/workflows/ace-170-verify.yml'
+      - 'updates/1.7.0/**'
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify A.C.E. 1.7.0 candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          BOOT="updates/1.7.0/Contents/Resources/ACE Bootstrap 1.7.0 command center.py"
+          PLIST="updates/1.7.0/Contents/Info.plist"
+          BASE="updates/1.6.5/Contents/Resources/ACE Bootstrap 1.6.5 attachments.py"
+          python3 -m py_compile "$BOOT"
+          python3 - <<'PY'
+          from pathlib import Path
+          import ast, base64, hashlib, plistlib, re, zlib, json
+          boot=Path('updates/1.7.0/Contents/Resources/ACE Bootstrap 1.7.0 command center.py')
+          plist=Path('updates/1.7.0/Contents/Info.plist')
+          base=Path('updates/1.6.5/Contents/Resources/ACE Bootstrap 1.6.5 attachments.py')
+          for p in (boot,plist,base):
+              b=p.read_bytes(); print('SHA256',p.as_posix(),hashlib.sha256(b).hexdigest(),len(b))
+          src=boot.read_text(encoding='utf-8'); ast.parse(src)
+          required=[
+              "BASE=H/'ACE Base 1.6.5.py'",
+              "ace.VERSION='1.7.0'",
+              'ACE170_COMMAND_CENTER',
+              'app.css?v=170-command-center',
+              'app.js?v=170-command-center',
+          ]
+          missing=[x for x in required if x not in src]
+          if missing: raise SystemExit('Missing bootstrap anchors: '+repr(missing))
+          decoded={}
+          for name in ('CSS170','JS170'):
+              m=re.search(name+r"=zlib\.decompress\(base64\.b64decode\('([^']+)'\)\)\.decode\('utf-8'\)",src)
+              if not m: raise SystemExit('Missing compressed '+name)
+              decoded[name]=zlib.decompress(base64.b64decode(m.group(1))).decode('utf-8')
+          css,js=decoded['CSS170'],decoded['JS170']
+          for x in ['#ace170Header','#ace170Rail','#ace170LiveDashboard','.ace170-live-main','.ace170-live-work','#chatInput','#sendBtn']:
+              if x not in css: raise SystemExit('Missing CSS anchor '+x)
+          for x in ['buildShell','buildLive','Current chat','Project','Working on','Recent conversation','Currently working on','Start Live','Voice On','Preview','AI Search','History','Projects & tools','Attach files']:
+              if x not in js: raise SystemExit('Missing UI feature '+x)
+          Path('/tmp/ace170.js').write_text(js,encoding='utf-8')
+          pl=plistlib.loads(plist.read_bytes())
+          assert pl['CFBundleShortVersionString']=='1.7.0' and pl['CFBundleVersion']=='1.7.0'
+          latest=json.loads(Path('latest.json').read_text())
+          print('LATEST_DURING_CANDIDATE_VERIFY',latest.get('version'))
+          print('ACE_170_STRUCTURE_OK')
+          PY
+          node --check /tmp/ace170.js
+          echo ACE_170_VERIFY_OK
