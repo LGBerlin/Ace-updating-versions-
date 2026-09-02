@@ -1,43 +1,192 @@
-name: ACE Stabilization Inspect
+name: ACE Stabilization Build
 on:
   push:
     paths:
       - '.github/workflows/ace-stabilize-inspect.yml'
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
-  inspect:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Trace voice and updater control identities
+      - name: Build 1.7.2 stabilization candidate
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-          import re
-          pats=[
-            r"(?:id|class|title|aria-label)=[\\\"'][^\\\"']*(?:voice|speak|speech|tts|update)[^\\\"']*[\\\"']",
-            r"\$\([\\\"'][^\\\"']*(?:voice|speak|speech|tts|update)[^\\\"']*[\\\"']\)",
-            r"getElementById\([\\\"'][^\\\"']*(?:voice|speak|speech|tts|update)[^\\\"']*[\\\"']\)",
-            r"querySelector\([\\\"'][^\\\"']*(?:voice|speak|speech|tts|update)[^\\\"']*[\\\"']\)",
-          ]
-          for p in sorted(Path('updates').rglob('*.py')):
-              s=p.read_text(errors='replace')
-              found=[]
-              for pat in pats:
-                  found += [(m.start(),m.group(0)) for m in re.finditer(pat,s,re.I)]
-              if found:
-                  print('\n###',p)
-                  for pos,val in sorted(set(found)):
-                      lo=max(0,pos-500);hi=min(len(s),pos+len(val)+1000)
-                      print('\nMATCH',val,'\n',s[lo:hi].replace('\n','\\n'))
-          print('\n=== RAW LIKELY IDENTIFIERS ===')
-          ids=set()
-          for p in Path('updates').rglob('*.py'):
-              s=p.read_text(errors='replace')
-              for m in re.finditer(r"[A-Za-z_][A-Za-z0-9_-]{2,40}",s):
-                  t=m.group(0)
-                  if re.search(r'voice|speak|speech|tts|update',t,re.I): ids.add(t)
-          print('\n'.join(sorted(ids,key=str.lower)))
+          import base64,re,zlib,shutil,plistlib
+
+          old=Path('updates/1.7.1/Contents/Resources/ACE Bootstrap 1.7.1 clean shell.py')
+          src=old.read_text(encoding='utf-8')
+          def extract(name):
+              m=re.search(name+r"=zlib\.decompress\(base64\.b64decode\('([^']+)'\)\)\.decode\('utf-8'\)",src)
+              if not m: raise SystemExit('missing '+name)
+              return m,zlib.decompress(base64.b64decode(m.group(1))).decode('utf-8')
+          mc,css=extract('CSS171'); mj,js=extract('JS171')
+
+          # Direct service routing: keep the original functional top-bar rendered offscreen,
+          # and route Voice/Update to exact service controls instead of fuzzy hidden-button clicks.
+          js=js.replace("const state={mode:'chat',legacyRoot:null,legacy:{},mounted:false};",
+                        "const state={mode:'chat',legacyRoot:null,serviceRoot:null,legacy:{},mounted:false};",1)
+          service_block=r'''  function strictVoiceControl(root){
+            root=root||state.serviceRoot||state.legacyRoot;if(!root)return null;
+            let best=null,bestScore=-999;
+            for(const el of [...root.querySelectorAll('button,a,[role="button"]')]){
+              if(el.id==='updateChip'||el.closest?.('#chatLog,.msg,.message,#artifactStudio'))continue;
+              const k=key(el),txt=norm(el.textContent),idc=String(el.id||'')+' '+String(el.className||'')+' '+String(el.getAttribute?.('aria-label')||'')+' '+String(el.title||'');
+              let score=0;
+              if(/(^|[-_\s])voice([-_\s:]|$)/i.test(idc))score+=45;
+              if(/^voice(?:\s*:|\s|$)/i.test(txt))score+=42;
+              if(/local\s+a\.c\.e\.?/i.test(k))score+=18;
+              if(/\bvoice\b/i.test(k))score+=15;
+              if(/\bspeak\b|speech|tts/i.test(k))score-=12;
+              if(score>bestScore){best=el;bestScore=score;}
+            }
+            return bestScore>0?best:null;
+          }
+          function exactUpdateControl(){
+            return state.serviceRoot?.querySelector('#updateChip')||state.legacyRoot?.querySelector('#updateChip')||null;
+          }
+          function prepareServiceIsland(){
+            const root=state.legacyRoot;if(!root||state.serviceRoot)return;
+            const service=document.createElement('div');service.id='ace172ServiceRoot';service.setAttribute('aria-hidden','true');
+            const update=root.querySelector('#updateChip');const voice=strictVoiceControl(root);
+            let host=null;
+            for(const el of [update,voice]){
+              if(!el)continue;
+              const h=el.closest?.('.topbar,header,[class*="topbar" i],[class*="brand" i]');
+              if(h&&root.contains(h)){host=h;break;}
+            }
+            if(host)service.appendChild(host);
+            else{
+              if(update)service.appendChild(update);
+              if(voice&&voice!==update)service.appendChild(voice);
+            }
+            document.body.appendChild(service);state.serviceRoot=service;
+          }
+          function captureLegacy(){
+            const exact=(word)=>legacyAction([[new RegExp('(^|\\s)'+word+'(\\s|$)','i'),15],[new RegExp('\\b'+word+'\\b','i'),5]]);
+            state.legacy.chat=exact('chat');
+            state.legacy.live=exact('live');
+            state.legacy.update=exactUpdateControl();
+            state.legacy.voice=strictVoiceControl();
+            state.legacy.preview=legacyAction([[/\bpreview\b/,12],[/artifact/,3]]);
+            state.legacy.newchat=legacyAction([[/new chat/,13],[/new conversation/,9],[/quick new/,8]]);
+            state.legacy.search=legacyAction([[/ai search/,13],[/search/,6]]);
+            state.legacy.history=legacyAction([[/history/,12],[/recent chats?/,5]]);
+            state.legacy.projects=legacyAction([[/projects?/,12],[/workspace/,4]]);
+            state.legacy.attach=legacyAction([[/attach/,12],[/upload/,8],[/paperclip/,6]]);
+            state.legacy.palette=legacyAction([[/command palette/,13],[/commands?/,5]]);
+            state.legacy.startLive=legacyAction([[/start live/,16],[/stop live/,13],[/listening/,8]]);
+          }
+          function clickService(el){
+            if(!el)return false;
+            try{el.click();return true;}catch(_){return false;}
+          }
+          function activateUpdate(){
+            captureLegacy();const el=exactUpdateControl();
+            if(clickService(el))return true;
+            try{if(typeof refreshUpdateStatus==='function'){refreshUpdateStatus(false);return true;}}catch(_){}
+            return false;
+          }
+          function activateVoice(){
+            captureLegacy();const el=strictVoiceControl();
+            if(!el)return false;
+            const ok=clickService(el);setTimeout(refreshStatus,80);setTimeout(refreshStatus,320);return ok;
+          }
+          function action(intent){
+            captureLegacy();let el=state.legacy[intent];
+            if(intent==='attach'&&!el){
+              const input=(state.legacyRoot||document).querySelector('input[type="file"]')||document.querySelector('input[type="file"]');
+              if(input){input.click();return true;}
+            }
+            if(el){try{el.click();}catch(_){return false;}setTimeout(promoteKnownOverlays,30);setTimeout(promoteKnownOverlays,180);return true;}
+            return false;
+          }
+'''
+          pat=r"  function captureLegacy\(\)\{[\s\S]*?\n  \}\n  function action\(intent\)\{[\s\S]*?\n  \}\n"
+          js,n=re.subn(pat,lambda m:service_block,js,count=1)
+          if n!=1: raise SystemExit('capture/action block replacement failed')
+          oldline="state.legacyRoot=legacy;\n    captureLegacy();"
+          newline="state.legacyRoot=legacy;\n    prepareServiceIsland();\n    captureLegacy();"
+          if oldline not in js: raise SystemExit('service island insertion anchor missing')
+          js=js.replace(oldline,newline,1)
+          reps={
+            "$('ace171Voice').onclick=()=>action('voice');":"$('ace171Voice').onclick=()=>activateVoice();",
+            "$('ace171Update').onclick=()=>action('update');":"$('ace171Update').onclick=()=>activateUpdate();",
+            "$('ace171VoiceLive').onclick=()=>{action('voice');setTimeout(refreshStatus,160);};":"$('ace171VoiceLive').onclick=()=>{activateVoice();setTimeout(refreshStatus,160);};",
+            "const voice=state.legacy.voice||legacyAction([[/voice/,11],[/speak/,3]]);":"const voice=strictVoiceControl();",
+          }
+          for a,b in reps.items():
+              if a not in js: raise SystemExit('JS anchor missing: '+a)
+              js=js.replace(a,b,1)
+          js=js.replace('window.__ACE171_CLEAN_SHELL__','window.__ACE172_STABILIZATION__')
+          js=js.replace('// ACE171_CLEAN_SHELL','// ACE172_STABILIZATION')
+          js=js.replace('v1.7.1','v1.7.2').replace('V1.7.1','V1.7.2')
+
+          css_fix=r'''
+/* ACE172_STABILIZATION: force all inherited application chrome into the approved green/lime family. */
+:root,body.ace171-ready,#ace171App,.ace171-preserved-overlay{
+  --cyan:#83c744!important;--cyan2:rgba(132,190,72,.34)!important;
+  --line:rgba(132,190,72,.24)!important;--raised:#0d2c0d!important;--text:#e7efdc!important;
+  --ace-green:#83c744!important;--ace-panel:#0d2c0d!important;--ace-deck:#0b260a!important;
+  accent-color:#83c744;
+}
+#ace172ServiceRoot{position:fixed!important;left:-12000px!important;top:0!important;width:980px!important;height:140px!important;display:block!important;visibility:visible!important;overflow:hidden!important;opacity:.001!important;pointer-events:none!important;z-index:-10!important;contain:layout paint style!important;transform:translateZ(0)!important}
+#ace172ServiceRoot .topbar,#ace172ServiceRoot header,#ace172ServiceRoot [class*="topbar" i],#ace172ServiceRoot [class*="brand" i]{display:flex!important;visibility:visible!important}
+body.ace171-ready ::selection{background:rgba(131,199,68,.34)!important;color:#f1f7e9!important}
+#ace171ChatView .bubble,#ace171ChatView .message,#ace171ChatView .msg .bubble{border-color:rgba(132,190,72,.20)!important;color:#dfead3!important;box-shadow:none!important}
+#ace171ChatView .msg.assistant .bubble,#ace171ChatView .assistant .bubble{background:#0d2c0d!important}
+#ace171ChatView .msg.user .bubble,#ace171ChatView .user .bubble{background:#123710!important}
+#ace171ChatView .user-message-actions button{color:#83aa71!important}
+#ace171ChatView .user-message-actions button:hover{background:rgba(131,199,68,.10)!important;color:#b4dc92!important}
+#ace171ChatView .user-inline-editor{background:#0d2c0d!important;border-color:rgba(132,190,72,.30)!important}
+#ace171ChatView .user-inline-editor textarea{background:#081e08!important;color:#dfead3!important;border-color:rgba(132,190,72,.22)!important}
+#ace171ChatView .user-inline-editor textarea:focus{border-color:#83c744!important;box-shadow:0 0 0 3px rgba(139,205,68,.07)!important}
+#ace161AttachmentTray,.ace161-attachment-chip{border-color:rgba(132,190,72,.22)!important;background:#0d2b0c!important;color:#cbdcc0!important}
+.composer-wrap.ace162-drop-active,.composer.ace162-drop-active{outline-color:#83c744!important}
+.ace160-project-chip,.ace160-live-context{border-color:rgba(132,190,72,.20)!important;background:rgba(13,44,13,.72)!important;color:#cbdcc0!important}
+.ace160-search-badge{color:#83c744!important}.ace160-searching .composer{box-shadow:0 0 0 1px rgba(131,199,68,.70),0 0 34px rgba(131,199,68,.10)!important}
+#ace163PaletteBackdrop{background:rgba(2,10,2,.58)!important}
+#ace163Palette{background:#0d2c0d!important;border-color:rgba(132,190,72,.34)!important;color:#e7efdc!important}
+#ace163PaletteTop,#ace163PaletteFoot{border-color:rgba(132,190,72,.14)!important}
+.ace163Cmd:hover,.ace163Cmd[data-active="1"]{background:rgba(131,199,68,.12)!important}
+.ace163-preview-resizer::after{background:rgba(132,190,72,.38)!important}.ace163-preview-resizer:hover::after,.ace163-preview-resizer[data-dragging="1"]::after{background:#83c744!important}
+#artifactStudio,.artifact-studio,[id^="ace161"][id*="Drawer"],[id^="ace161"][id*="Modal"],.ace171-preserved-overlay{--cyan:#83c744!important;--cyan2:rgba(132,190,72,.34)!important;--line:rgba(132,190,72,.24)!important;--raised:#0d2c0d!important;--text:#e7efdc!important}
+#artifactStudio button:not(.ace-stop),#artifactStudio input,#artifactStudio textarea,#artifactStudio select,.ace171-preserved-overlay button:not(.ace-stop),.ace171-preserved-overlay input,.ace171-preserved-overlay textarea,.ace171-preserved-overlay select{border-color:rgba(132,190,72,.22)!important}
+#artifactStudio input:focus,#artifactStudio textarea:focus,#artifactStudio select:focus,.ace171-preserved-overlay input:focus,.ace171-preserved-overlay textarea:focus,.ace171-preserved-overlay select:focus{border-color:#83c744!important;outline-color:#83c744!important;box-shadow:0 0 0 3px rgba(139,205,68,.07)!important}
+/*ACE172_GREEN_COMPAT*/
+'''
+          css=css.replace('/*ACE171_CLEAN_SHELL*/','/*ACE171_CLEAN_SHELL*/\n'+css_fix)
+
+          # Rebuild the compressed payloads, then bump bootstrap metadata/markers.
+          c64=base64.b64encode(zlib.compress(css.encode('utf-8'),9)).decode('ascii')
+          j64=base64.b64encode(zlib.compress(js.encode('utf-8'),9)).decode('ascii')
+          src=src[:mc.start()]+"CSS171=zlib.decompress(base64.b64decode('"+c64+"')).decode('utf-8')"+src[mc.end():]
+          # Locate JS again after CSS replacement because offsets changed.
+          mj2=re.search(r"JS171=zlib\.decompress\(base64\.b64decode\('([^']+)'\)\)\.decode\('utf-8'\)",src)
+          if not mj2: raise SystemExit('JS payload lost')
+          src=src[:mj2.start()]+"JS171=zlib.decompress(base64.b64decode('"+j64+"')).decode('utf-8')"+src[mj2.end():]
+          src=src.replace('A.C.E. 1.7.1 — clean-shell stabilization.','A.C.E. 1.7.2 — control and palette stabilization.',1)
+          src=src.replace("ace.VERSION='1.7.1'","ace.VERSION='1.7.2'",1).replace("['current_version']='1.7.1'","['current_version']='1.7.2'",1)
+          src=src.replace('app.css?v=171-clean-shell','app.css?v=172-stabilization').replace('app.js?v=171-clean-shell','app.js?v=172-stabilization')
+          src=src.replace('Current version: v1.7.1','Current version: v1.7.2')
+          src=src.replace('ACE171_CLEAN_SHELL','ACE172_STABILIZATION')
+          # Keep CSS/JS variable names stable internally; only the release marker/version changes.
+
+          dest=Path('updates/1.7.2/Contents/Resources/ACE Bootstrap 1.7.2 stabilization.py')
+          dest.parent.mkdir(parents=True,exist_ok=True);dest.write_text(src,encoding='utf-8')
+          psrc=Path('updates/1.7.1/Contents/Info.plist').read_bytes();pl=plistlib.loads(psrc)
+          pl['CFBundleShortVersionString']='1.7.2';pl['CFBundleVersion']='1.7.2'
+          Path('updates/1.7.2/Contents/Info.plist').write_bytes(plistlib.dumps(pl,fmt=plistlib.FMT_XML,sort_keys=False))
+          print('BUILT',dest,len(dest.read_bytes()))
           PY
+          python3 -m py_compile "updates/1.7.2/Contents/Resources/ACE Bootstrap 1.7.2 stabilization.py"
+          git config user.name "A.C.E. Stabilization"
+          git config user.email "actions@users.noreply.github.com"
+          git add updates/1.7.2
+          git commit -m "Build A.C.E. 1.7.2 stabilization candidate"
+          git push
