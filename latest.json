@@ -1,6 +1,6 @@
 {
   "version": "1.6.4",
-  "notes": "Final overnight reliability pass. Hardens attachment-context scoping across chat/project navigation, prevents clipboard file/image pastes from also inserting unwanted text into the composer, and makes the Live preview resizer fully clean up drag listeners on pointer cancellation, window blur and visibility changes while clamping after window resize. The 1.6.3 command palette and Live preview ergonomics, 1.6.2 attachment-aware context and local document extraction, 1.6.1 chats/projects/sidebar/Live workspace, 1.6.0 deterministic Preview Edit fix and faster multi-source research, and all existing Update, Voice, Stop, Chat/Live, artifact preview/Edit, regeneration and download/export behavior remain cumulative.",
+  "notes": "Repaired 1.6.4 final QA package; no additional feature release. Corrects cumulative UI access to private chat/artifact state, the actual poster pencil-button target, dirty-editor navigation and failed-save handling, attachment context across fast-to-full chat retries, premature attachment sends, and repeated Live preview reloads. Preserves the cumulative sidebar/projects/history, AI Search, local file extraction, faster multi-source research, voice, Stop, Chat/Live, updater, preview, and exports. Tested with the installed 1.5.9 resources in an isolated staging copy. Image attachments are previewable, but pixel-level image understanding is not supported. Hardware voice/Live and external services still require testing on the installed app.",
   "patch": {
     "base": "1.5.8",
     "files": [
@@ -47,9 +47,15 @@
         "mode": "644"
       },
       {
+        "path": "Contents/Resources/ACE Integration 1.6.4.py",
+        "url": "updates/1.6.4/Contents/Resources/ACE%20Integration%201.6.4.py",
+        "sha256": "a08bb9a94e3cd24aa7060a10f0dade5e57fea03007d962eddb61ccad4c22f813",
+        "mode": "644"
+      },
+      {
         "path": "Contents/Resources/ACE Bootstrap.py",
-        "url": "updates/1.6.4/Contents/Resources/ACE%20Bootstrap%201.6.4%20final%20QA.py",
-        "sha256": "3cc779dfe546a5d03df3bf1dc3e8949d60e67987ec8d65408281f354572232d2",
+        "url": "updates/1.6.4/Contents/Resources/ACE%20Bootstrap%201.6.4%20integration.py",
+        "sha256": "427160fe296b276f6116061fb8768c73690342b194f178d84e15e73e134ef17a",
         "mode": "644"
       },
       {
