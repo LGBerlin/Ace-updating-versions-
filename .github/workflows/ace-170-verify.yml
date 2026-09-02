@@ -4,38 +4,32 @@ on:
     paths:
       - '.github/workflows/ace-170-verify.yml'
       - 'updates/1.7.0/**'
+      - 'latest.json'
   workflow_dispatch:
 jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify A.C.E. 1.7.0 candidate
+      - name: Verify A.C.E. 1.7.0 candidate and manifest
         shell: bash
         run: |
           set -euo pipefail
-          BOOT="updates/1.7.0/Contents/Resources/ACE Bootstrap 1.7.0 command center.py"
-          PLIST="updates/1.7.0/Contents/Info.plist"
-          BASE="updates/1.6.5/Contents/Resources/ACE Bootstrap 1.6.5 attachments.py"
-          python3 -m py_compile "$BOOT"
+          python3 -m py_compile "updates/1.7.0/Contents/Resources/ACE Bootstrap 1.7.0 command center.py"
           python3 - <<'PY'
           from pathlib import Path
           import ast, base64, hashlib, plistlib, re, zlib, json
-          boot=Path('updates/1.7.0/Contents/Resources/ACE Bootstrap 1.7.0 command center.py')
-          plist=Path('updates/1.7.0/Contents/Info.plist')
-          base=Path('updates/1.6.5/Contents/Resources/ACE Bootstrap 1.6.5 attachments.py')
-          for p in (boot,plist,base):
-              b=p.read_bytes(); print('SHA256',p.as_posix(),hashlib.sha256(b).hexdigest(),len(b))
+          repo=Path('.')
+          boot=repo/'updates/1.7.0/Contents/Resources/ACE Bootstrap 1.7.0 command center.py'
+          plist=repo/'updates/1.7.0/Contents/Info.plist'
+          base165=repo/'updates/1.6.5/Contents/Resources/ACE Bootstrap 1.6.5 attachments.py'
+          base164=repo/'updates/1.6.4/Contents/Resources/ACE Bootstrap 1.6.4 integration.py'
+          hashes={}
+          for p in (boot,plist,base165,base164):
+              b=p.read_bytes(); h=hashlib.sha256(b).hexdigest(); hashes[p.as_posix()]=h; print('SHA256',p.as_posix(),h,len(b))
           src=boot.read_text(encoding='utf-8'); ast.parse(src)
-          required=[
-              "BASE=H/'ACE Base 1.6.5.py'",
-              "ace.VERSION='1.7.0'",
-              'ACE170_COMMAND_CENTER',
-              'app.css?v=170-command-center',
-              'app.js?v=170-command-center',
-          ]
-          missing=[x for x in required if x not in src]
-          if missing: raise SystemExit('Missing bootstrap anchors: '+repr(missing))
+          for x in ["BASE=H/'ACE Base 1.6.5.py'","ace.VERSION='1.7.0'",'ACE170_COMMAND_CENTER','app.css?v=170-command-center','app.js?v=170-command-center']:
+              if x not in src: raise SystemExit('Missing bootstrap anchor '+x)
           decoded={}
           for name in ('CSS170','JS170'):
               m=re.search(name+r"=zlib\.decompress\(base64\.b64decode\('([^']+)'\)\)\.decode\('utf-8'\)",src)
@@ -47,10 +41,20 @@ jobs:
           for x in ['buildShell','buildLive','Current chat','Project','Working on','Recent conversation','Currently working on','Start Live','Voice On','Preview','AI Search','History','Projects & tools','Attach files']:
               if x not in js: raise SystemExit('Missing UI feature '+x)
           Path('/tmp/ace170.js').write_text(js,encoding='utf-8')
-          pl=plistlib.loads(plist.read_bytes())
-          assert pl['CFBundleShortVersionString']=='1.7.0' and pl['CFBundleVersion']=='1.7.0'
-          latest=json.loads(Path('latest.json').read_text())
-          print('LATEST_DURING_CANDIDATE_VERIFY',latest.get('version'))
+          pl=plistlib.loads(plist.read_bytes()); assert pl['CFBundleShortVersionString']=='1.7.0' and pl['CFBundleVersion']=='1.7.0'
+          latest=json.loads((repo/'latest.json').read_text())
+          print('LATEST',latest.get('version'))
+          if latest.get('version')=='1.7.0':
+              assert latest['patch']['base']=='1.6.4'
+              expected={
+                'Contents/Resources/ACE Base 1.6.4.py':hashes[base164.as_posix()],
+                'Contents/Resources/ACE Base 1.6.5.py':hashes[base165.as_posix()],
+                'Contents/Resources/ACE Bootstrap.py':hashes[boot.as_posix()],
+                'Contents/Info.plist':hashes[plist.as_posix()],
+              }
+              got={x['path']:x['sha256'] for x in latest['patch']['files']}
+              assert got==expected,(got,expected)
+              print('ACE_170_MANIFEST_OK')
           print('ACE_170_STRUCTURE_OK')
           PY
           node --check /tmp/ace170.js
