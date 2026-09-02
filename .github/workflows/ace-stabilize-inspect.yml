@@ -23,15 +23,11 @@ jobs:
           m=re.search(r"JS171=zlib\.decompress\(base64\.b64decode\('([^']+)'\)\)\.decode\('utf-8'\)",src)
           if not m: raise SystemExit('JS payload missing')
           js=zlib.decompress(base64.b64decode(m.group(1))).decode('utf-8')
-          old="""            return bestScore>0?best:null;
-          }
-          function exactUpdateControl(){"""
-          new="""            if(bestScore<=0&&root===state.serviceRoot&&state.legacyRoot)return strictVoiceControl(state.legacyRoot);
-            return bestScore>0?best:null;
-          }
-          function exactUpdateControl(){"""
-          if old not in js: raise SystemExit('voice fallback anchor missing')
-          js=js.replace(old,new,1)
+          pat=r"(function strictVoiceControl\(root\)\{[\s\S]*?)(return bestScore>0\?best:null;)"
+          repl=r"\1if(bestScore<=0&&root===state.serviceRoot&&state.legacyRoot)return strictVoiceControl(state.legacyRoot);\n    \2"
+          js2,n=re.subn(pat,repl,js,count=1)
+          if n!=1: raise SystemExit('strictVoiceControl fallback insertion failed')
+          js=js2
           assert 'root===state.serviceRoot&&state.legacyRoot' in js
           j64=base64.b64encode(zlib.compress(js.encode('utf-8'),9)).decode('ascii')
           src=src[:m.start()]+"JS171=zlib.decompress(base64.b64decode('"+j64+"')).decode('utf-8')"+src[m.end():]
@@ -42,6 +38,6 @@ jobs:
           python3 -m py_compile "updates/1.7.2/Contents/Resources/ACE Bootstrap 1.7.2 stabilization.py"
           git config user.name "A.C.E. Stabilization"
           git config user.email "actions@users.noreply.github.com"
-          git add updates/1.7.2/Contents/Resources/ACE\ Bootstrap\ 1.7.2\ stabilization.py
+          git add "updates/1.7.2/Contents/Resources/ACE Bootstrap 1.7.2 stabilization.py"
           git commit -m "Harden A.C.E. 1.7.2 voice service fallback"
           git push
