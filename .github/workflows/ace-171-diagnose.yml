@@ -1,0 +1,35 @@
+name: ACE 1.7.1 Diagnose
+on:
+  push:
+    paths:
+      - '.github/workflows/ace-171-diagnose.yml'
+  workflow_dispatch:
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect 1.7.0 UI controller
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re,base64,zlib
+          p=Path('updates/1.7.0/Contents/Resources/ACE Bootstrap 1.7.0 command center.py')
+          s=p.read_text()
+          m=re.search(r"JS170=zlib\.decompress\(base64\.b64decode\('([^']+)'\)\)\.decode\('utf-8'\)",s)
+          js=zlib.decompress(base64.b64decode(m.group(1))).decode()
+          print('JS_LEN',len(js))
+          for needle in ['function buildShell','function buildLive','function setMode','setMode=','liveView','chatView','ace170LiveDashboard','modeChat','modeLive','liveBtn','chatBtn','MutationObserver']:
+              print('\n===',needle,'===')
+              pos=js.find(needle)
+              print('POS',pos)
+              if pos>=0: print(js[max(0,pos-900):pos+3500])
+          print('\n=== IDs/CLASSES CREATED ===')
+          ids=sorted(set(re.findall(r"id=['\"]([^'\"]+)",js)))
+          print('\n'.join(ids))
+          print('\n=== DISPLAY/HIDDEN OPS ===')
+          for line in js.splitlines():
+              if any(k in line for k in ['display','hidden','classList','remove()','replaceChildren','appendChild','insertBefore']):
+                  if 'ace170' in line or 'live' in line.lower() or 'chat' in line.lower(): print(line[:800])
+          PY
