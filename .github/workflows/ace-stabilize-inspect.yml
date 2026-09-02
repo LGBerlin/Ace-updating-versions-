@@ -13,8 +13,70 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo 'ZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCmltcG9ydCBhc3QsYmFzZTY0LGhhc2hsaWIsanNvbixwbGlzdGxpYixyZSx6bGliCmJvb3Q9UGF0aCgndXBkYXRlcy8xLjcuMi9Db250ZW50cy9SZXNvdXJjZXMvQUNFIEJvb3RzdHJhcCAxLjcuMiBzdGFiaXphdGlvbi5weScpCnBsaXN0PVBhdGgoJ3VwZGF0ZXMvMS43LjIvQ29udGVudHMvSW5mby5wbGlzdCcpCmI9Ym9vdC5yZWFkX2J5dGVzKCk7cGI9cGxpc3QucmVhZF9ieXRlcygpCnByaW50KCdCT09UX1NIQTI1NicsaGFzaGxpYi5zaGEyNTYoYikuaGV4ZGlnZXN0KCksbGVuKGIpKQpwcmludCgnUExJU1RfU0hBMjU2JyxoYXNobGliLnNoYTI1NihwYikuaGV4ZGlnZXN0KCksbGVuKHBiKSkKc3JjPWIuZGVjb2RlKCk7YXN0LnBhcnNlKHNyYykKYXNzZXJ0ICJCQVNFPUgvJ0FDRSBCYXNlIDEuNi41LnB5JyIgaW4gc3JjCmFzc2VydCAiYWNlLlZFUlNJT049JzEuNy4yJyIgaW4gc3JjCmFzc2VydCAiWydjdXJyZW50X3ZlcnNpb24nXT0nMS43LjInIiBpbiBzcmMKYXNzZXJ0ICdBQ0UgQmFzZSAxLjcuMC5weScgbm90IGluIHNyYwpkZWYgZGVjKG5hbWUpOgogICAgbT1yZS5zZWFyY2gobmFtZStyIj16bGliXC5kZWNvbXByZXNzXChiYXNlNjRcLmI2NGRlY29kZVwoJyhbXiddKyknXClcKVwuZGVjb2RlXCgndXRmLTgnXCkiLHNyYykKICAgIGlmIG5vdCBtOiByYWlzZSBTeXN0ZW1FeGl0KCdtaXNzaW5nICcrbmFtZSkKICAgIHJldHVybiB6bGliLmRlY29tcHJlc3MoYmFzZTY0LmI2NGRlY29kZShtLmdyb3VwKDEpKSkuZGVjb2RlKCkKY3NzLGpzPWRlYygnQ1NTMTcxJyksZGVjKCdKUzE3MScpClBhdGgoJy90bXAvYWNlMTcyLmpzJykud3JpdGVfdGV4dChqcyk7UGF0aCgnL3RtcC9hY2UxNzIuY3NzJykud3JpdGVfdGV4dChjc3MpCmZvciBiYWQgaW4gWydjdXJyZW50TW9kZUZyb21PcmlnaW5hbCcsJ3N5bmNNb2RlKCknLCdpZihwcm94eSljbGlja0FjdGlvbihtb2RlKScsJ2FjZTE3MC1zdGFnZS1saXZlJ106CiAgICBhc3NlcnQgYmFkIG5vdCBpbiBqcyxiYWQKZm9yIGdvb2QgaW4gWyJzdGF0ZT17bW9kZTonY2hhdCciLCdmdW5jdGlvbiBzZXRNb2RlKG1vZGUpJywncHJlcGFyZVNlcnZpY2VJc2xhbmQnLCdhY2UxNzJTZXJ2aWNlUm9vdCcsJ3N0cmljdFZvaWNlQ29udHJvbCcsJ2V4YWN0VXBkYXRlQ29udHJvbCcsJ2FjdGl2YXRlVm9pY2UnLCdhY3RpdmF0ZVVwZGF0ZSddOgogICAgYXNzZXJ0IGdvb2QgaW4ganMsZ29vZAphc3NlcnQgIiQoJ2FjZTE3MVZvaWNlJykub25jbGljaz0oKT0+YWN0aXZhdGVWb2ljZSgpOyIgaW4ganMKYXNzZXJ0ICIkKCdhY2UxNzFVcGRhdGUnKS5vbmNsaWNrPSgpPT5hY3RpdmF0ZVVwZGF0ZSgpOyIgaW4ganMKYXNzZXJ0ICIkKCdhY2UxNzFWb2ljZUxpdmUnKS5vbmNsaWNrPSgpPT57YWN0aXZhdGVWb2ljZSgpOyIgaW4ganMKYXNzZXJ0ICJhY3Rpb24oJ3ZvaWNlJykiIG5vdCBpbiBqcyBhbmQgImFjdGlvbigndXBkYXRlJykiIG5vdCBpbiBqcwphc3NlcnQgInF1ZXJ5U2VsZWN0b3IoJyN1cGRhdGVDaGlwJykiIGluIGpzCmFzc2VydCAiI2NoYXRMb2csLm1zZywubWVzc2FnZSwjYXJ0aWZhY3RTdHVkaW8iIGluIGpzCmFzc2VydCAnI2FjZTE3MUxlZ2FjeVJvb3R7ZGlzcGxheTpub25lIWltcG9ydGFudH0nIGluIGNzcwphc3NlcnQgJyNhY2UxNzJTZXJ2aWNlUm9vdHsnIGluIGNzcyBhbmQgJ2xlZnQ6LTEyMDAwcHghaW1wb3J0YW50JyBpbiBjc3MKYXNzZXJ0ICcvKkFDRTE3Ml9HUkVFTl9DT01QQVQqLycgaW4gY3NzCmZvciB4IGluIFsnLS1jeWFuOiM4M2M3NDQhaW1wb3J0YW50JywnLS1jeWFuMjpyZ2JhKDEzMiwxOTAsNzIsLjM0KSFpbXBvcnRhbnQnLCctLWFjZS1ncmVlbjojODNjNzQ0IWltcG9ydGFudCcsJ2FjY2VudC1jb2xvcjojODNjNzQ0J106CiAgICBhc3NlcnQgeCBpbiBjc3MseApiYWQ9W10KZm9yIGksbGluZSBpbiBlbnVtZXJhdGUoY3NzLnNwbGl0bGluZXMoKSwxKToKICAgIGZvciBoeCBpbiByZS5maW5kYWxsKHInI1swLTlhLWZBLUZdezZ9JyxsaW5lKToKICAgICAgICByLGcsYmI9KGludChoeFtqOmo rMl0sMTYpIGZvciBqIGluICgxLDMsNSkpCiAgICAgICAgaWYgYmI+ZysyMiBhbmQgYmI+cisyMjpiYWQuYXBwZW5kKChpLGh4KSkKICAgIGZvciBtIGluIHJlLmZpbmRpdGVyKHIncmdiYT9cKChcZClccyosXHMqKFxkKylccyosXHMqKFxkKyknLGxpbmUpOgogICAgICAgIHIsZyxiYj1tYXAoaW50LG0uZ3JvdXBzKCkpCiAgICAgICAgaWYgYmI+ZysyMiBhbmQgYmI+cisyMjpiYWQuYXBwZW5kKChpLG0uZ3JvdXAoMCkpKQphc3NlcnQgbm90IGJhZCxiYWRbOjIwXQpsb2dvPWJhc2U2NC5iNjRkZWNvZGUocmUuc2VhcmNoKHIiTE9HT19CNjQ9JyhbXiddKyknIixzcmMpLmdyb3VwKDEpKQpleHBlY3Q9cmUuc2VhcmNoKHIiTE9HT19TSEE9JyhbXiddKyknIixzcmMpLmdyb3VwKDEpCmFzc2VydCBoYXNobGliLnNoYTI1Nihsb2dvKS5oZXhkaWdlc3QoKT09ZXhwZWN0CnBsPXBsaXN0bGliLmxvYWRzKHBiKTthc3NlcnQgcGxbJ0NGQnVuZGxlU2hvcnRWZXJzaW9uU3RyaW5nJ109PScxLjcuMicgYW5kIHBsWydDRkJ1bmRsZVZlcnNpb24nXT09JzEuNy4yJwoKIyBFeHBhbmQgYWxsIGNvbXByZXNzZWQgSlMvQ1NTIHBheWxvYWRzIGluIHRoZSB1cGRhdGUgaGlzdG9yeSwgdGhlbiBjb25maXJtIHRoZQojIHByZXNlcnZlZCBjYXBhYmlsaXRpZXMgc3RpbGwgZXhpc3QgaW4gdGhlIGN1bXVsYXRpdmUgc291cmNlIGJhc2UuCnBhcnRzPVtdCmZvciBwIGluIFBhdGgoJ3VwZGF0ZXMnKS5yZ2xvYignKi5weScpOgogICAgdD1wLnJlYWRfdGV4dChlcnJvcnM9J3JlcGxhY2UnKTtwYXJ0cy5hcHBlbmQodCkKICAgIGZvciBibG9iIGluIHJlLmZpbmRhbGwociJiYXNlNjRcLmI2NGRlY29kZVwoJyhbXiddKyknXCkiLHQpOgogICAgICAgIHRyeToKICAgICAgICAgICAgcmF3PXpsaWIuZGVjb21wcmVzcyhiYXNlNjQuYjY0ZGVjb2RlKGJsb2IpKS5kZWNvZGUoJ3V0Zi04JykKICAgICAgICAgICAgcGFydHMuYXBwZW5kKHJhdykKICAgICAgICBleGNlcHQgRXhjZXB0aW9uOiBwYXNzCmFsbHRleHQ9J1xuJy5qb2luKHBhcnRzKQpyZXF1aXJlZD17CiAnYXR0YWNobWVudCBleHRyYWN0aW9uJzonL2FwaS9hdHRhY2htZW50cy9leHRyYWN0JywKICdhdHRhY2htZW50IHZpc2lvbic6Jy9hcGkvYXR0YWNobWVudHMvdmlzaW9uJywKICdwcm9qZWN0cyc6J1Byb2plY3RzJywKICdoaXN0b3J5JzonSGlzdG9yeScsCiAnQUkgU2VhcmNoJzonQUkgU2VhcmNoJywKICdhcnRpZmFjdCBwcmV2aWV3JzonUHJldmlldycsCiAncG9zdGVyIHN1cHBvcnQnOidwb3N0ZXInLAogJ3ByZXNlbnRhdGlvbiBzdXBwb3J0JzoncHJlc2VudGF0aW9uJywKICdkb3dubG9hZHMnOidEb3dubG9hZCcsCiAndm9pY2Ugc3BlZWNoJzonY2FuY2VsU3BlZWNoJywKICdQb2NrZXQgVFRTJzonUG9ja2V0JywKICdTdG9wJzonL2FwaS9zdG9wJywKICdwZXJzaXN0ZW5jZSc6J2xvY2FsU3RvcmFnZScsCiAnR29vZ2xlIHJlc2VhcmNoJzonR29vZ2xlJywKICdCaW5nIHJlc2VhcmNoJzonQmluZycsCiAnRHVja0R1Y2tHbyByZXNlYXJjaCc6J0R1Y2tEdWNrR28nLAp9Cm1pc3Npbmc9W25hbWUgZm9yIG5hbWUsYW5jaG9yIGluIHJlcXVpcmVkLml0ZW1zKCkgaWYgYW5jaG9yLmxvd2VyKCkgbm90IGluIGFsbHRleHQubG93ZXIoKV0KYXNzZXJ0IG5vdCBtaXNzaW5nLG1pc3NpbmcKcHJpbnQoJ1JFR1JFU1NJT05fQ0FQQUJJTElUWV9BTkNIT1JTX09LJyxsZW4ocmVxdWlyZWQpKQpsYXRlc3Q9anNvbi5sb2FkcyhQYXRoKCdsYXRlc3QuanNvbicpLnJlYWRfdGV4dCgpKTthc3NlcnQgbGF0ZXN0LmdldCgndmVyc2lvbicpPT0nMS43LjEnCnByaW50KCdMQVRFU1RfU1RJTEwnLGxhdGVzdC5nZXQoJ3ZlcnNpb24nKSkKcHJpbnQoJ0FDRV8xNzJfQ0FORElEQVRFX1ZFUklGWV9PSycpCg==' | base64 -d > /tmp/verify172.py
-          python3 /tmp/verify172.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import ast,base64,hashlib,json,plistlib,re,zlib
+          boot=Path('updates/1.7.2/Contents/Resources/ACE Bootstrap 1.7.2 stabilization.py')
+          plist=Path('updates/1.7.2/Contents/Info.plist')
+          b=boot.read_bytes();pb=plist.read_bytes()
+          print('BOOT_SHA256',hashlib.sha256(b).hexdigest(),len(b))
+          print('PLIST_SHA256',hashlib.sha256(pb).hexdigest(),len(pb))
+          src=b.decode();ast.parse(src)
+          assert "BASE=H/'ACE Base 1.6.5.py'" in src
+          assert "ace.VERSION='1.7.2'" in src
+          assert "['current_version']='1.7.2'" in src
+          assert 'ACE Base 1.7.0.py' not in src
+          def dec(name):
+              m=re.search(name+r"=zlib\.decompress\(base64\.b64decode\('([^']+)'\)\)\.decode\('utf-8'\)",src)
+              if not m: raise SystemExit('missing '+name)
+              return zlib.decompress(base64.b64decode(m.group(1))).decode()
+          css,js=dec('CSS171'),dec('JS171')
+          Path('/tmp/ace172.js').write_text(js);Path('/tmp/ace172.css').write_text(css)
+          for bad in ['currentModeFromOriginal','syncMode()','if(proxy)clickAction(mode)','ace170-stage-live']:
+              assert bad not in js,bad
+          for good in ["state={mode:'chat'",'function setMode(mode)','prepareServiceIsland','ace172ServiceRoot','strictVoiceControl','exactUpdateControl','activateVoice','activateUpdate']:
+              assert good in js,good
+          assert "$('ace171Voice').onclick=()=>activateVoice();" in js
+          assert "$('ace171Update').onclick=()=>activateUpdate();" in js
+          assert "$('ace171VoiceLive').onclick=()=>{activateVoice();" in js
+          assert "action('voice')" not in js and "action('update')" not in js
+          assert "querySelector('#updateChip')" in js
+          assert '#chatLog,.msg,.message,#artifactStudio' in js
+          assert '#ace171LegacyRoot{display:none!important}' in css
+          assert '#ace172ServiceRoot{' in css and 'left:-12000px!important' in css
+          assert '/*ACE172_GREEN_COMPAT*/' in css
+          for x in ['--cyan:#83c744!important','--cyan2:rgba(132,190,72,.34)!important','--ace-green:#83c744!important','accent-color:#83c744']:
+              assert x in css,x
+          bad=[]
+          for i,line in enumerate(css.splitlines(),1):
+              for hx in re.findall(r'#[0-9a-fA-F]{6}',line):
+                  r,g,bb=(int(hx[j:j+2],16) for j in (1,3,5))
+                  if bb>g+22 and bb>r+22: bad.append((i,hx))
+              for m in re.finditer(r'rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)',line):
+                  r,g,bb=map(int,m.groups())
+                  if bb>g+22 and bb>r+22: bad.append((i,m.group(0)))
+          assert not bad,bad[:20]
+          logo=base64.b64decode(re.search(r"LOGO_B64='([^']+)'",src).group(1))
+          expect=re.search(r"LOGO_SHA='([^']+)'",src).group(1)
+          assert hashlib.sha256(logo).hexdigest()==expect
+          pl=plistlib.loads(pb)
+          assert pl['CFBundleShortVersionString']=='1.7.2' and pl['CFBundleVersion']=='1.7.2'
+          parts=[]
+          for p in Path('updates').rglob('*.py'):
+              t=p.read_text(errors='replace');parts.append(t)
+              for blob in re.findall(r"base64\.b64decode\('([^']+)'\)",t):
+                  try: parts.append(zlib.decompress(base64.b64decode(blob)).decode('utf-8'))
+                  except Exception: pass
+          alltext='\n'.join(parts).lower()
+          required={'attachment extraction':'/api/attachments/extract','attachment vision':'/api/attachments/vision','projects':'projects','history':'history','ai search':'ai search','artifact preview':'preview','poster support':'poster','presentation support':'presentation','downloads':'download','voice speech':'cancelspeech','pocket tts':'pocket','stop':'/api/stop','persistence':'localstorage','google research':'google','bing research':'bing','duckduckgo research':'duckduckgo'}
+          missing=[name for name,anchor in required.items() if anchor not in alltext]
+          assert not missing,missing
+          print('REGRESSION_CAPABILITY_ANCHORS_OK',len(required))
+          latest=json.loads(Path('latest.json').read_text())
+          assert latest.get('version')=='1.7.1',latest.get('version')
+          print('LATEST_STILL',latest.get('version'))
+          print('ACE_172_CANDIDATE_VERIFY_OK')
+          PY
           node --check /tmp/ace172.js
           python3 -m py_compile "updates/1.7.2/Contents/Resources/ACE Bootstrap 1.7.2 stabilization.py"
           echo ACE_172_VERIFY_OK
