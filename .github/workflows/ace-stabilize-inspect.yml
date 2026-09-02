@@ -9,37 +9,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Inspect cumulative update chain
+      - name: Trace voice and updater control identities
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-          import re,base64,zlib
-          p=Path('updates/1.7.1/Contents/Resources/ACE Bootstrap 1.7.1 clean shell.py')
-          src=p.read_text()
-          def dec(name):
-              m=re.search(name+r"=zlib\.decompress\(base64\.b64decode\('([^']+)'\)\)\.decode\('utf-8'\)",src)
-              return zlib.decompress(base64.b64decode(m.group(1))).decode() if m else ''
-          css,js=dec('CSS171'),dec('JS171')
-          print('=== 1.7.1 JS FULL NUMBERED ===')
-          for i,line in enumerate(js.splitlines(),1): print(f'{i:03}: {line}')
-          print('\n=== CSS CUSTOM PROPERTY REFERENCES IN UPDATE CHAIN ===')
-          props=set()
-          for f in Path('updates').rglob('*.py'):
-              s=f.read_text(errors='replace')
-              props.update(re.findall(r'var\(--([A-Za-z0-9_-]+)',s))
-          print('\n'.join(sorted(props)))
-          print('\n=== CSS/JS SELECTOR-LIKE TOKENS AROUND KNOWN CORE CONTROLS ===')
-          needles=['composer','chatInput','chatLog','updateChip','voice','speak','studio','artifact','preview','drawer','sidebar','search','project','history','download','assistant','msg','bubble']
-          for f in sorted(Path('updates').rglob('*.py')):
-              s=f.read_text(errors='replace')
-              lines=[]
-              for i,line in enumerate(s.splitlines(),1):
-                  if any(n.lower() in line.lower() for n in needles): lines.append((i,line[:1200]))
-              if lines:
-                  print('\n###',f)
-                  for i,line in lines[:220]: print(f'{i}: {line}')
-          print('\n=== 1.7.1 CSS FULL NUMBERED ===')
-          for i,line in enumerate(css.splitlines(),1): print(f'{i:03}: {line}')
+          import re
+          pats=[
+            r"(?:id|class|title|aria-label)=[\\\"'][^\\\"']*(?:voice|speak|speech|tts|update)[^\\\"']*[\\\"']",
+            r"\$\([\\\"'][^\\\"']*(?:voice|speak|speech|tts|update)[^\\\"']*[\\\"']\)",
+            r"getElementById\([\\\"'][^\\\"']*(?:voice|speak|speech|tts|update)[^\\\"']*[\\\"']\)",
+            r"querySelector\([\\\"'][^\\\"']*(?:voice|speak|speech|tts|update)[^\\\"']*[\\\"']\)",
+          ]
+          for p in sorted(Path('updates').rglob('*.py')):
+              s=p.read_text(errors='replace')
+              found=[]
+              for pat in pats:
+                  found += [(m.start(),m.group(0)) for m in re.finditer(pat,s,re.I)]
+              if found:
+                  print('\n###',p)
+                  for pos,val in sorted(set(found)):
+                      lo=max(0,pos-500);hi=min(len(s),pos+len(val)+1000)
+                      print('\nMATCH',val,'\n',s[lo:hi].replace('\n','\\n'))
+          print('\n=== RAW LIKELY IDENTIFIERS ===')
+          ids=set()
+          for p in Path('updates').rglob('*.py'):
+              s=p.read_text(errors='replace')
+              for m in re.finditer(r"[A-Za-z_][A-Za-z0-9_-]{2,40}",s):
+                  t=m.group(0)
+                  if re.search(r'voice|speak|speech|tts|update',t,re.I): ids.add(t)
+          print('\n'.join(sorted(ids,key=str.lower)))
           PY
