@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify clean shell and release files
+      - name: Verify clean shell and release manifest
         shell: bash
         run: |
           set -euo pipefail
@@ -21,27 +21,33 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import ast,base64,hashlib,json,plistlib,re,zlib
-          boot=Path('updates/1.7.1/Contents/Resources/ACE Bootstrap 1.7.1 clean shell.py')
-          plist=Path('updates/1.7.1/Contents/Info.plist')
-          b=boot.read_bytes(); print('SHA256',boot,hashlib.sha256(b).hexdigest(),len(b))
-          pb=plist.read_bytes(); print('SHA256',plist,hashlib.sha256(pb).hexdigest(),len(pb))
-          src=b.decode(); ast.parse(src)
+          repo=Path('.')
+          boot=repo/'updates/1.7.1/Contents/Resources/ACE Bootstrap 1.7.1 clean shell.py'
+          plist=repo/'updates/1.7.1/Contents/Info.plist'
+          base165=repo/'updates/1.6.5/Contents/Resources/ACE Bootstrap 1.6.5 attachments.py'
+          base164=repo/'updates/1.6.4/Contents/Resources/ACE Bootstrap 1.6.4 integration.py'
+          files=(boot,plist,base165,base164)
+          hashes={}
+          for p in files:
+              b=p.read_bytes();h=hashlib.sha256(b).hexdigest();hashes[p.as_posix()]=h
+              print('SHA256',p.as_posix(),h,len(b))
+          src=boot.read_text(encoding='utf-8');ast.parse(src)
           required=["BASE=H/'ACE Base 1.6.5.py'","ace.VERSION='1.7.1'",'ACE171_CLEAN_SHELL','ace171-logo.png','LOGO_SHA']
           missing=[x for x in required if x not in src]
           if missing: raise SystemExit('Missing bootstrap anchors '+repr(missing))
-          if "ACE Base 1.7.0.py" in src: raise SystemExit('1.7.1 must not load 1.7.0 overlay runtime')
+          if "ACE Base 1.7.0.py" in src: raise SystemExit('1.7.1 must not load the 1.7.0 overlay runtime')
           def dec(name):
               m=re.search(name+r"=zlib\.decompress\(base64\.b64decode\('([^']+)'\)\)\.decode\('utf-8'\)",src)
               if not m: raise SystemExit('Missing compressed '+name)
-              return zlib.decompress(base64.b64decode(m.group(1))).decode()
+              return zlib.decompress(base64.b64decode(m.group(1))).decode('utf-8')
           css,js=dec('CSS171'),dec('JS171')
           for bad in ['currentModeFromOriginal','syncMode()','if(proxy)clickAction(mode)','ace170-stage-live']:
               if bad in js: raise SystemExit('Legacy mode synchronization survived: '+bad)
           for good in ["state={mode:'chat'",'function setMode(mode)','ace171LegacyRoot','mountCore','buildLive','promoteKnownOverlays','ace171-logo.png']:
               if good not in js: raise SystemExit('Missing clean-shell feature '+good)
           if '#ace171LegacyRoot{display:none!important}' not in css: raise SystemExit('Legacy UI is not hard-hidden')
-          Path('/tmp/ace171.js').write_text(js)
-          # Validate cleanup algorithm against a synthetic persisted 1.7.0 resource.
+          Path('/tmp/ace171.js').write_text(js,encoding='utf-8')
+          # Validate the actual cleanup rule used on an installed 1.7.0 app.js.
           def trunc(s,marker,end=None):
               i=s.rfind(marker)
               if i<0:return s
@@ -55,9 +61,21 @@ jobs:
           logo=base64.b64decode(logo64)
           expect=re.search(r"LOGO_SHA='([^']+)'",src).group(1)
           assert hashlib.sha256(logo).hexdigest()==expect
-          pl=plistlib.loads(pb);assert pl['CFBundleShortVersionString']=='1.7.1' and pl['CFBundleVersion']=='1.7.1'
-          latest=json.loads(Path('latest.json').read_text())
-          print('LATEST_DURING_VERIFY',latest.get('version'))
+          pl=plistlib.loads(plist.read_bytes())
+          assert pl['CFBundleShortVersionString']=='1.7.1' and pl['CFBundleVersion']=='1.7.1'
+          latest=json.loads((repo/'latest.json').read_text())
+          print('LATEST',latest.get('version'))
+          if latest.get('version')=='1.7.1':
+              assert latest['patch']['base']=='1.7.0',latest['patch']['base']
+              expected={
+                'Contents/Resources/ACE Base 1.6.4.py':hashes[base164.as_posix()],
+                'Contents/Resources/ACE Base 1.6.5.py':hashes[base165.as_posix()],
+                'Contents/Resources/ACE Bootstrap.py':hashes[boot.as_posix()],
+                'Contents/Info.plist':hashes[plist.as_posix()],
+              }
+              got={x['path']:x['sha256'] for x in latest['patch']['files']}
+              assert got==expected,(got,expected)
+              print('ACE_171_MANIFEST_OK')
           print('ACE_171_STRUCTURE_OK')
           PY
           node --check /tmp/ace171.js
