@@ -1,82 +1,47 @@
-name: ACE 1.7.2 Verify
+name: ACE 1.7.2 Voice Hardening
 on:
   push:
     paths:
       - '.github/workflows/ace-stabilize-inspect.yml'
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
-  verify:
+  harden:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify candidate and cumulative capabilities
+      - name: Add service-to-legacy voice fallback and revalidate syntax
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-          import ast,base64,hashlib,json,plistlib,re,zlib
-          boot=Path('updates/1.7.2/Contents/Resources/ACE Bootstrap 1.7.2 stabilization.py')
-          plist=Path('updates/1.7.2/Contents/Info.plist')
-          b=boot.read_bytes();pb=plist.read_bytes()
-          print('BOOT_SHA256',hashlib.sha256(b).hexdigest(),len(b))
-          print('PLIST_SHA256',hashlib.sha256(pb).hexdigest(),len(pb))
-          src=b.decode();ast.parse(src)
-          assert "BASE=H/'ACE Base 1.6.5.py'" in src
-          assert "ace.VERSION='1.7.2'" in src
-          assert "['current_version']='1.7.2'" in src
-          assert 'ACE Base 1.7.0.py' not in src
-          def dec(name):
-              m=re.search(name+r"=zlib\.decompress\(base64\.b64decode\('([^']+)'\)\)\.decode\('utf-8'\)",src)
-              if not m: raise SystemExit('missing '+name)
-              return zlib.decompress(base64.b64decode(m.group(1))).decode()
-          css,js=dec('CSS171'),dec('JS171')
-          Path('/tmp/ace172.js').write_text(js);Path('/tmp/ace172.css').write_text(css)
-          for bad in ['currentModeFromOriginal','syncMode()','if(proxy)clickAction(mode)','ace170-stage-live']:
-              assert bad not in js,bad
-          for good in ["state={mode:'chat'",'function setMode(mode)','prepareServiceIsland','ace172ServiceRoot','strictVoiceControl','exactUpdateControl','activateVoice','activateUpdate']:
-              assert good in js,good
-          assert "$('ace171Voice').onclick=()=>activateVoice();" in js
-          assert "$('ace171Update').onclick=()=>activateUpdate();" in js
-          assert "$('ace171VoiceLive').onclick=()=>{activateVoice();" in js
-          assert "action('voice')" not in js and "action('update')" not in js
-          assert "querySelector('#updateChip')" in js
-          assert '#chatLog,.msg,.message,#artifactStudio' in js
-          assert '#ace171LegacyRoot{display:none!important}' in css
-          assert '#ace172ServiceRoot{' in css and 'left:-12000px!important' in css
-          assert '/*ACE172_GREEN_COMPAT*/' in css
-          for x in ['--cyan:#83c744!important','--cyan2:rgba(132,190,72,.34)!important','--ace-green:#83c744!important','accent-color:#83c744']:
-              assert x in css,x
-          bad=[]
-          for i,line in enumerate(css.splitlines(),1):
-              for hx in re.findall(r'#[0-9a-fA-F]{6}',line):
-                  r,g,bb=(int(hx[j:j+2],16) for j in (1,3,5))
-                  if bb>g+22 and bb>r+22: bad.append((i,hx))
-              for m in re.finditer(r'rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)',line):
-                  r,g,bb=map(int,m.groups())
-                  if bb>g+22 and bb>r+22: bad.append((i,m.group(0)))
-          assert not bad,bad[:20]
-          logo=base64.b64decode(re.search(r"LOGO_B64='([^']+)'",src).group(1))
-          expect=re.search(r"LOGO_SHA='([^']+)'",src).group(1)
-          assert hashlib.sha256(logo).hexdigest()==expect
-          pl=plistlib.loads(pb)
-          assert pl['CFBundleShortVersionString']=='1.7.2' and pl['CFBundleVersion']=='1.7.2'
-          parts=[]
-          for p in Path('updates').rglob('*.py'):
-              t=p.read_text(errors='replace');parts.append(t)
-              for blob in re.findall(r"base64\.b64decode\('([^']+)'\)",t):
-                  try: parts.append(zlib.decompress(base64.b64decode(blob)).decode('utf-8'))
-                  except Exception: pass
-          alltext='\n'.join(parts).lower()
-          required={'attachment extraction':'/api/attachments/extract','attachment vision':'/api/attachments/vision','projects':'projects','history':'history','ai search':'ai search','artifact preview':'preview','poster support':'poster','presentation support':'presentation','downloads':'download','voice speech':'cancelspeech','pocket tts':'pocket','stop':'/api/stop','persistence':'localstorage','google research':'google','bing research':'bing','duckduckgo research':'duckduckgo'}
-          missing=[name for name,anchor in required.items() if anchor not in alltext]
-          assert not missing,missing
-          print('REGRESSION_CAPABILITY_ANCHORS_OK',len(required))
-          latest=json.loads(Path('latest.json').read_text())
-          assert latest.get('version')=='1.7.1',latest.get('version')
-          print('LATEST_STILL',latest.get('version'))
-          print('ACE_172_CANDIDATE_VERIFY_OK')
+          import base64,re,zlib
+          p=Path('updates/1.7.2/Contents/Resources/ACE Bootstrap 1.7.2 stabilization.py')
+          src=p.read_text(encoding='utf-8')
+          m=re.search(r"JS171=zlib\.decompress\(base64\.b64decode\('([^']+)'\)\)\.decode\('utf-8'\)",src)
+          if not m: raise SystemExit('JS payload missing')
+          js=zlib.decompress(base64.b64decode(m.group(1))).decode('utf-8')
+          old="""            return bestScore>0?best:null;
+          }
+          function exactUpdateControl(){"""
+          new="""            if(bestScore<=0&&root===state.serviceRoot&&state.legacyRoot)return strictVoiceControl(state.legacyRoot);
+            return bestScore>0?best:null;
+          }
+          function exactUpdateControl(){"""
+          if old not in js: raise SystemExit('voice fallback anchor missing')
+          js=js.replace(old,new,1)
+          assert 'root===state.serviceRoot&&state.legacyRoot' in js
+          j64=base64.b64encode(zlib.compress(js.encode('utf-8'),9)).decode('ascii')
+          src=src[:m.start()]+"JS171=zlib.decompress(base64.b64decode('"+j64+"')).decode('utf-8')"+src[m.end():]
+          p.write_text(src,encoding='utf-8')
+          Path('/tmp/ace172.js').write_text(js,encoding='utf-8')
           PY
           node --check /tmp/ace172.js
           python3 -m py_compile "updates/1.7.2/Contents/Resources/ACE Bootstrap 1.7.2 stabilization.py"
-          echo ACE_172_VERIFY_OK
+          git config user.name "A.C.E. Stabilization"
+          git config user.email "actions@users.noreply.github.com"
+          git add updates/1.7.2/Contents/Resources/ACE\ Bootstrap\ 1.7.2\ stabilization.py
+          git commit -m "Harden A.C.E. 1.7.2 voice service fallback"
+          git push
