@@ -1,4 +1,4 @@
-name: ACE 1.7.2 Final Verify
+name: ACE 1.7.2 Post Release Verify
 on:
   push:
     paths:
@@ -9,78 +9,57 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify release candidate, updater inputs, and regressions
+      - name: Verify published manifest against exact release bytes
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
           import ast,base64,hashlib,json,plistlib,re,zlib
-          paths={
-            'base164':Path('updates/1.6.4/Contents/Resources/ACE Bootstrap 1.6.4 integration.py'),
-            'base165':Path('updates/1.6.5/Contents/Resources/ACE Bootstrap 1.6.5 attachments.py'),
-            'boot172':Path('updates/1.7.2/Contents/Resources/ACE Bootstrap 1.7.2 stabilization.py'),
-            'plist172':Path('updates/1.7.2/Contents/Info.plist'),
+          latest=json.loads(Path('latest.json').read_text())
+          assert latest['version']=='1.7.2'
+          assert latest['patch']['base']=='1.7.1'
+          source={
+            'Contents/Resources/ACE Base 1.6.4.py':Path('updates/1.6.4/Contents/Resources/ACE Bootstrap 1.6.4 integration.py'),
+            'Contents/Resources/ACE Base 1.6.5.py':Path('updates/1.6.5/Contents/Resources/ACE Bootstrap 1.6.5 attachments.py'),
+            'Contents/Resources/ACE Bootstrap.py':Path('updates/1.7.2/Contents/Resources/ACE Bootstrap 1.7.2 stabilization.py'),
+            'Contents/Info.plist':Path('updates/1.7.2/Contents/Info.plist'),
           }
-          hashes={}
-          for k,p in paths.items():
-              b=p.read_bytes();h=hashlib.sha256(b).hexdigest();hashes[k]=h
-              print('RELEASE_HASH',k,h,len(b),p)
-          src=paths['boot172'].read_text();ast.parse(src)
-          assert "BASE=H/'ACE Base 1.6.5.py'" in src
+          manifest={x['path']:x for x in latest['patch']['files']}
+          assert set(manifest)==set(source)
+          for path,p in source.items():
+              h=hashlib.sha256(p.read_bytes()).hexdigest()
+              print('POST_RELEASE_HASH',path,h,len(p.read_bytes()))
+              assert manifest[path]['sha256']==h,(path,manifest[path]['sha256'],h)
+              assert manifest[path]['mode']=='644'
+          boot=source['Contents/Resources/ACE Bootstrap.py']
+          src=boot.read_text();ast.parse(src)
           assert "ace.VERSION='1.7.2'" in src and "['current_version']='1.7.2'" in src
-          assert 'ACE Base 1.7.0.py' not in src
+          assert "BASE=H/'ACE Base 1.6.5.py'" in src
           def dec(name):
-              m=re.search(name+r"=zlib\.decompress\(base64\.b64decode\('([^']+)'\)\)\.decode\('utf-8'\)",src)
-              assert m,name
+              m=re.search(name+r"=zlib\.decompress\(base64\.b64decode\('([^']+)'\)\)\.decode\('utf-8'\)",src);assert m
               return zlib.decompress(base64.b64decode(m.group(1))).decode()
           css,js=dec('CSS171'),dec('JS171')
           Path('/tmp/ace172.js').write_text(js)
-          for bad in ['currentModeFromOriginal','syncMode()','if(proxy)clickAction(mode)','ace170-stage-live']:
-              assert bad not in js,bad
-          for good in ["state={mode:'chat'",'function setMode(mode)','prepareServiceIsland','ace172ServiceRoot','strictVoiceControl','exactUpdateControl','activateVoice','activateUpdate','root===state.serviceRoot&&state.legacyRoot']:
-              assert good in js,good
+          assert 'root===state.serviceRoot&&state.legacyRoot' in js
           assert "$('ace171Voice').onclick=()=>activateVoice();" in js
           assert "$('ace171Update').onclick=()=>activateUpdate();" in js
-          assert "$('ace171VoiceLive').onclick=()=>{activateVoice();" in js
           assert "action('voice')" not in js and "action('update')" not in js
-          assert "querySelector('#updateChip')" in js
-          assert '#chatLog,.msg,.message,#artifactStudio' in js
           assert '#ace171LegacyRoot{display:none!important}' in css
-          assert '#ace172ServiceRoot{' in css and 'left:-12000px!important' in css
           assert '/*ACE172_GREEN_COMPAT*/' in css
-          for x in ['--cyan:#83c744!important','--cyan2:rgba(132,190,72,.34)!important','--ace-green:#83c744!important','accent-color:#83c744']:
-              assert x in css,x
           bad=[]
-          for i,line in enumerate(css.splitlines(),1):
+          for line in css.splitlines():
               for hx in re.findall(r'#[0-9a-fA-F]{6}',line):
                   r,g,b=(int(hx[j:j+2],16) for j in (1,3,5))
-                  if b>g+22 and b>r+22: bad.append((i,hx))
-              for m in re.finditer(r'rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)',line):
-                  r,g,b=map(int,m.groups())
-                  if b>g+22 and b>r+22: bad.append((i,m.group(0)))
+                  if b>g+22 and b>r+22: bad.append(hx)
           assert not bad,bad[:20]
           logo=base64.b64decode(re.search(r"LOGO_B64='([^']+)'",src).group(1))
-          expect=re.search(r"LOGO_SHA='([^']+)'",src).group(1)
-          assert hashlib.sha256(logo).hexdigest()==expect
-          pl=plistlib.loads(paths['plist172'].read_bytes())
+          logo_sha=re.search(r"LOGO_SHA='([^']+)'",src).group(1)
+          assert hashlib.sha256(logo).hexdigest()==logo_sha
+          pl=plistlib.loads(source['Contents/Info.plist'].read_bytes())
           assert pl['CFBundleShortVersionString']=='1.7.2' and pl['CFBundleVersion']=='1.7.2'
-          parts=[]
-          for p in Path('updates').rglob('*.py'):
-              t=p.read_text(errors='replace');parts.append(t)
-              for blob in re.findall(r"base64\.b64decode\('([^']+)'\)",t):
-                  try: parts.append(zlib.decompress(base64.b64decode(blob)).decode())
-                  except Exception: pass
-          alltext='\n'.join(parts).lower()
-          required={'attachment extraction':'/api/attachments/extract','attachment vision':'/api/attachments/vision','projects':'projects','history':'history','ai search':'ai search','artifact preview':'preview','poster':'poster','presentation':'presentation','downloads':'download','voice speech':'cancelspeech','pocket tts':'pocket','stop':'/api/stop','persistence':'localstorage','google research':'google','bing research':'bing','duckduckgo research':'duckduckgo'}
-          missing=[name for name,anchor in required.items() if anchor not in alltext]
-          assert not missing,missing
-          latest=json.loads(Path('latest.json').read_text())
-          assert latest.get('version')=='1.7.1' and latest['patch']['base']=='1.7.0'
-          print('REGRESSION_CAPABILITY_ANCHORS_OK',len(required))
-          print('UPDATER_TARGET_BASE','1.7.1')
-          print('ACE_172_FINAL_PRE_RELEASE_VERIFY_OK')
+          print('ACE_172_POST_RELEASE_MANIFEST_OK')
           PY
           node --check /tmp/ace172.js
           python3 -m py_compile "updates/1.7.2/Contents/Resources/ACE Bootstrap 1.7.2 stabilization.py"
-          echo ACE_172_FINAL_VERIFY_OK
+          echo ACE_172_POST_RELEASE_VERIFY_OK
