@@ -1,67 +1,25 @@
 {
-  "version": "1.6.4",
-  "notes": "Repaired 1.6.4 final QA package; no additional feature release. Corrects cumulative UI access to private chat/artifact state, the actual poster pencil-button target, dirty-editor navigation and failed-save handling, attachment context across fast-to-full chat retries, premature attachment sends, and repeated Live preview reloads. Preserves the cumulative sidebar/projects/history, AI Search, local file extraction, faster multi-source research, voice, Stop, Chat/Live, updater, preview, and exports. Tested with the installed 1.5.9 resources in an isolated staging copy. Image attachments are previewable, but pixel-level image understanding is not supported. Hardware voice/Live and external services still require testing on the installed app.",
+  "version": "1.6.5",
+  "notes": "Adds real chat attachments while preserving the complete 1.6.4 A.C.E. runtime. Attach PNG/JPG/WebP/GIF images and Word, PowerPoint, PDF, Excel, text and related files by picker, drag/drop or paste. DOCX/PPTX/XLSX and text-bearing files are extracted locally; DOC/RTF use macOS textutil; PDFs use pdftotext when present with a macOS PDFKit fallback. Images are analyzed locally through the active Ollama vision-capable model before the normal A.C.E. response. Attachment state remains scoped to the originating chat. Existing posters, presentations, Preview/Edit, Live preview side panel, downloads/exports, Voice/Pocket TTS, Stop, Chat/Live, projects/history, AI Search and multi-source research are retained from 1.6.4. Release files were syntax-checked and SHA-256 verified from a fresh GitHub checkout. Final hardware/runtime behavior still requires a click-through test on the user's Mac.",
   "patch": {
-    "base": "1.5.8",
+    "base": "1.6.4",
     "files": [
       {
-        "path": "Contents/Resources/ACE Base 1.5.7.py",
-        "url": "updates/1.5.7/Contents/Resources/ACE%20Bootstrap.py",
-        "sha256": "9d9899d95a7804c7449534fb3ebf3730eece5715c70beafd145552158615d1ac",
-        "mode": "644"
-      },
-      {
-        "path": "Contents/Resources/ACE Base 1.5.8.py",
-        "url": "updates/1.5.8/Contents/Resources/ACE%20Bootstrap%201.5.8%20final.py",
-        "sha256": "86b34b4e16841ecb4717fde0676b30cd4d4dd8ba0156f2dfea81b52e7a1aad17",
-        "mode": "644"
-      },
-      {
-        "path": "Contents/Resources/ACE Base 1.5.9.py",
-        "url": "updates/1.5.9/Contents/Resources/ACE%20Bootstrap%201.5.9%20web.py",
-        "sha256": "5b645f5f53bfab02dc874a68d1418e2c323a2fe7ec2a4d5044a42b863691c6b2",
-        "mode": "644"
-      },
-      {
-        "path": "Contents/Resources/ACE Base 1.6.0.py",
-        "url": "updates/1.6.0/Contents/Resources/ACE%20Bootstrap%201.6.0%20core.py",
-        "sha256": "3def95d0f6604969cbf6d5a2638127a1ffd31ad83f15551697a4b9aa7c0b7f33",
-        "mode": "644"
-      },
-      {
-        "path": "Contents/Resources/ACE Base 1.6.1.py",
-        "url": "updates/1.6.1/Contents/Resources/ACE%20Bootstrap%201.6.1%20workspace.py",
-        "sha256": "d9c421ef1c4797e594f0797d68d5cd23bc2ca8a94ab8185bc75e643c380d5b1d",
-        "mode": "644"
-      },
-      {
-        "path": "Contents/Resources/ACE Base 1.6.2.py",
-        "url": "updates/1.6.2/Contents/Resources/ACE%20Bootstrap%201.6.2%20attachments.py",
-        "sha256": "4560c481639aefeb40180101ef8bd6c48c06cde33afa67d5c98feeee78f1c5d7",
-        "mode": "644"
-      },
-      {
-        "path": "Contents/Resources/ACE Base 1.6.3.py",
-        "url": "updates/1.6.3/Contents/Resources/ACE%20Bootstrap%201.6.3%20workspace%20polish.py",
-        "sha256": "2627a77621ef72ee369366fd59a761f93a1fe19605710c804c84a7eb470a1e0d",
-        "mode": "644"
-      },
-      {
-        "path": "Contents/Resources/ACE Integration 1.6.4.py",
-        "url": "updates/1.6.4/Contents/Resources/ACE%20Integration%201.6.4.py",
-        "sha256": "a08bb9a94e3cd24aa7060a10f0dade5e57fea03007d962eddb61ccad4c22f813",
-        "mode": "644"
-      },
-      {
-        "path": "Contents/Resources/ACE Bootstrap.py",
+        "path": "Contents/Resources/ACE Base 1.6.4.py",
         "url": "updates/1.6.4/Contents/Resources/ACE%20Bootstrap%201.6.4%20integration.py",
         "sha256": "427160fe296b276f6116061fb8768c73690342b194f178d84e15e73e134ef17a",
         "mode": "644"
       },
       {
+        "path": "Contents/Resources/ACE Bootstrap.py",
+        "url": "updates/1.6.5/Contents/Resources/ACE%20Bootstrap%201.6.5%20attachments.py",
+        "sha256": "05080748a60577087bb3f690e7fe8a07178ce50d876a5736a51eb093fccbc91a",
+        "mode": "644"
+      },
+      {
         "path": "Contents/Info.plist",
-        "url": "updates/1.6.4/Contents/Info.plist",
-        "sha256": "b9b2c353db30012ce583c63a2ab7f6a373df07755a5d285cb8738a6dc848ad56",
+        "url": "updates/1.6.5/Contents/Info.plist",
+        "sha256": "b1b462dc72d0ee64de6749c5e8b603869cb8b7e577293d458ef45adb01e6e716",
         "mode": "644"
       }
     ]
