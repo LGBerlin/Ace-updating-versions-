@@ -1,0 +1,71 @@
+name: ACE 1.6.1 Package QA
+on:
+  push:
+    paths:
+      - 'updates/1.6.1/**'
+      - '.github/workflows/ace161-package-qa.yml'
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate fast research release
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import ast, hashlib, plistlib, re
+          p=Path('updates/1.6.1/Contents/Resources/ACE Bootstrap 1.6.1 fast research.py')
+          src=p.read_text()
+          ast.parse(src, filename=str(p))
+          compile(src, str(p), 'exec')
+          assert "BASE = H / 'ACE Base 1.6.0.py'" in src
+          assert "MIN_SOURCES = 3" in src
+          assert "TARGET_SOURCES = 4" in src
+          assert "MAX_SOURCES = 5" in src
+          assert "shutdown(wait=False, cancel_futures=True)" in src
+          assert "r159._research = _research_fast" in src
+          assert "ace.VERSION = '1.6.1'" in src
+          assert not re.search(r"_patch_file\(.*app\.js",src)
+          pl=plistlib.loads(Path('updates/1.6.1/Contents/Info.plist').read_bytes())
+          assert pl['CFBundleShortVersionString']=='1.6.1'
+          assert pl['CFBundleVersion']=='1.6.1'
+          for f in [
+              Path('updates/1.6.0/Contents/Resources/ACE Bootstrap 1.6.0 theme.py'),
+              p,
+              Path('updates/1.6.1/Contents/Info.plist'),
+          ]:
+              print('SHA256',f,hashlib.sha256(f.read_bytes()).hexdigest())
+          print('STATIC_QA=PASS')
+          PY
+          python3 - <<'PY'
+          # Prove the scheduler pattern does not wait for a slow worker after enough
+          # sources are complete. This mirrors the wait/cancel/shutdown behavior.
+          import concurrent.futures,time
+          def worker(delay,value):
+              time.sleep(delay); return value
+          ex=concurrent.futures.ThreadPoolExecutor(max_workers=5)
+          futs={ex.submit(worker,d,v) for d,v in [(0.05,1),(0.06,2),(0.07,3),(0.08,4),(2.5,5)]}
+          pending=set(futs); out=[]; start=time.monotonic(); deadline=start+1.0; target_at=None
+          try:
+              while pending and len(out)<5:
+                  now=time.monotonic(); rem=deadline-now
+                  if rem<=0: break
+                  if len(out)>=4:
+                      if target_at is None: target_at=now
+                      rem=min(rem,0.10-(now-target_at))
+                      if rem<=0: break
+                  done,pending=concurrent.futures.wait(pending,timeout=rem,return_when=concurrent.futures.FIRST_COMPLETED)
+                  if not done: break
+                  out += [f.result() for f in done]
+                  if len(out)>=4 and target_at is None: target_at=time.monotonic()
+          finally:
+              for f in pending: f.cancel()
+              ex.shutdown(wait=False,cancel_futures=True)
+          elapsed=time.monotonic()-start
+          assert len(out)>=4, out
+          assert elapsed<0.5, elapsed
+          print('NONBLOCKING_SCHEDULER_QA=PASS',round(elapsed,3),len(out))
+          PY
