@@ -2,9 +2,9 @@
 """A.C.E. managed private SearXNG runtime.
 
 This helper uses only the Python standard library. On first launch it creates a
-private virtual environment under ~/Library/Application Support/A.C.E, installs
-a pinned SearXNG release into that private environment, writes a localhost-only
-configuration, and starts the service on 127.0.0.1:8888.
+private virtual environment under ~/Library/Application Support/A.C.E, downloads
+a pinned SearXNG source release, installs that release's pinned dependencies,
+and starts the source directly on 127.0.0.1:8888.
 
 No Docker, Terminal interaction, system daemon, or separately launched app is
 required. The installed runtime is owned by A.C.E. and can be rebuilt safely if
@@ -18,16 +18,18 @@ import secrets
 import shutil
 import subprocess
 import sys
+import tarfile
 import threading
 import time
 import urllib.request
 
 PIN = '8f452ee89293d9a752a776f4c33f5a5f124fff97'
-PACKAGE_URL = f'https://github.com/searxng/searxng/archive/{PIN}.tar.gz'
+SOURCE_URL = f'https://github.com/searxng/searxng/archive/{PIN}.tar.gz'
 LOCAL_URL = 'http://127.0.0.1:8888'
 ROOT = Path.home() / 'Library' / 'Application Support' / 'A.C.E' / 'searxng'
 VENV = ROOT / 'venv'
 PY = VENV / 'bin' / 'python3'
+SOURCE = ROOT / 'source'
 SETTINGS = ROOT / 'settings.yml'
 READY = ROOT / 'ready.json'
 PIDFILE = ROOT / 'searxng.pid'
@@ -70,7 +72,7 @@ def healthy():
 
 def _ready_for_pin():
     try:
-        if not PY.is_file() or not READY.is_file():
+        if not PY.is_file() or not (SOURCE / 'searx' / 'webapp.py').is_file() or not READY.is_file():
             return False
         d = json.loads(READY.read_text(encoding='utf-8'))
         return d.get('pin') == PIN
@@ -113,6 +115,31 @@ def _run(cmd, timeout, cwd=None, env=None):
     )
 
 
+def _download(url, dest, timeout=90):
+    req = urllib.request.Request(url, headers={'User-Agent': 'A.C.E./1.6.5'})
+    with urllib.request.urlopen(req, timeout=timeout) as r, dest.open('wb') as f:
+        while True:
+            chunk = r.read(1024 * 1024)
+            if not chunk:
+                break
+            f.write(chunk)
+
+
+def _safe_extract(archive, dest):
+    dest = dest.resolve()
+    with tarfile.open(archive, 'r:gz') as tf:
+        members = tf.getmembers()
+        for m in members:
+            target = (dest / m.name).resolve()
+            if target != dest and dest not in target.parents:
+                raise RuntimeError('Unsafe path in SearXNG source archive')
+        tf.extractall(dest, members=members)
+    dirs = [p for p in dest.iterdir() if p.is_dir()]
+    if len(dirs) != 1 or not (dirs[0] / 'requirements.txt').is_file():
+        raise RuntimeError('Unexpected SearXNG source archive layout')
+    return dirs[0]
+
+
 def _install_runtime():
     global _LAST_ERROR
     ROOT.mkdir(parents=True, exist_ok=True)
@@ -120,36 +147,61 @@ def _install_runtime():
         INSTALL_LOCK.write_text(str(os.getpid()), encoding='utf-8')
     except Exception:
         pass
+    archive = ROOT / f'searxng-{PIN}.tar.gz'
+    stage = ROOT / 'source-stage'
     try:
         if _ready_for_pin():
             _write_settings()
             return True
 
         _log(f'Installing private SearXNG runtime at pin {PIN}')
-        if VENV.exists():
-            shutil.rmtree(VENV, ignore_errors=True)
+        for p in (VENV, SOURCE, stage):
+            if p.exists():
+                shutil.rmtree(p, ignore_errors=True)
+        try:
+            archive.unlink(missing_ok=True)
+        except Exception:
+            pass
+
         r = _run([sys.executable, '-m', 'venv', str(VENV)], timeout=120)
         if r.returncode != 0 or not PY.is_file():
             raise RuntimeError('Could not create private Python environment: ' + (r.stdout or '')[-1200:])
+
+        _log('Downloading pinned SearXNG source')
+        _download(SOURCE_URL, archive, timeout=90)
+        stage.mkdir(parents=True, exist_ok=True)
+        extracted = _safe_extract(archive, stage)
 
         env = dict(os.environ)
         env['PIP_DISABLE_PIP_VERSION_CHECK'] = '1'
         env['PIP_NO_INPUT'] = '1'
         r = _run(
-            [PY, '-m', 'pip', 'install', '--prefer-binary', '--no-input', PACKAGE_URL],
+            [PY, '-m', 'pip', 'install', '--prefer-binary', '--no-input', '-r', extracted / 'requirements.txt'],
             timeout=420,
             env=env,
         )
         if r.returncode != 0:
             raise RuntimeError('SearXNG dependency installation failed: ' + (r.stdout or '')[-1800:])
 
-        r = _run([PY, '-c', 'import searx; print(searx.__file__)'], timeout=25, env=env)
+        shutil.move(str(extracted), str(SOURCE))
+        shutil.rmtree(stage, ignore_errors=True)
+        try:
+            archive.unlink(missing_ok=True)
+        except Exception:
+            pass
+
+        verify = (
+            'import sys; '
+            f'sys.path.insert(0,{str(SOURCE)!r}); '
+            'import searx; print(searx.__file__)'
+        )
+        r = _run([PY, '-c', verify], timeout=25, env=env)
         if r.returncode != 0:
-            raise RuntimeError('Installed SearXNG could not be imported: ' + (r.stdout or '')[-1000:])
+            raise RuntimeError('Installed SearXNG source could not be imported: ' + (r.stdout or '')[-1000:])
 
         _write_settings()
         READY.write_text(
-            json.dumps({'pin': PIN, 'installed_at': time.time(), 'package_url': PACKAGE_URL}, indent=2),
+            json.dumps({'pin': PIN, 'installed_at': time.time(), 'source_url': SOURCE_URL}, indent=2),
             encoding='utf-8',
         )
         _log('Private SearXNG runtime installation complete')
@@ -163,6 +215,12 @@ def _install_runtime():
             INSTALL_LOCK.unlink(missing_ok=True)
         except Exception:
             pass
+        try:
+            archive.unlink(missing_ok=True)
+        except Exception:
+            pass
+        if stage.exists():
+            shutil.rmtree(stage, ignore_errors=True)
 
 
 def _read_pid():
@@ -230,6 +288,7 @@ def _start_service():
         'SEARXNG_LIMITER': 'false',
         'SEARXNG_PUBLIC_INSTANCE': 'false',
         'SEARXNG_IMAGE_PROXY': 'false',
+        'PYTHONPATH': str(SOURCE),
         'PYTHONUNBUFFERED': '1',
     })
     try:
@@ -237,7 +296,7 @@ def _start_service():
         out = LOG.open('a', encoding='utf-8')
         p = subprocess.Popen(
             [str(PY), '-m', 'searx.webapp'],
-            cwd=str(ROOT),
+            cwd=str(SOURCE),
             env=env,
             stdout=out,
             stderr=subprocess.STDOUT,
@@ -295,7 +354,7 @@ def ensure_started(block=False, timeout=3.0):
     if not block:
         return False
     # If the private runtime is already installed, startup is normally quick.
-    # On the very first launch, do not freeze A.C.E. while pip prepares it.
+    # On the very first launch, do not freeze A.C.E. while dependencies prepare.
     if not _ready_for_pin():
         return False
     deadline = time.monotonic() + max(0.0, float(timeout))
