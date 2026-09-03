@@ -1,0 +1,27 @@
+{
+  "version": "1.6.8",
+  "notes": "Poster speed profile. Keeps the complete 1.6.7 regression-safe runtime and timing instrumentation, and changes only the OpenDesign poster-generation request: supported agents are asked to use low reasoning effort. For Codex, OpenDesign translates this to model_reasoning_effort=low on the spawned Codex run. Search, poster generation, Preview/Edit, save/export routes, voice, theme, Stop and source recall remain on the 1.6.7/1.6.6 implementation. The poster timer remains enabled so the next run can be compared directly with the prior 112.9-second preview time.",
+  "patch": {
+    "base": "1.6.7",
+    "files": [
+      {
+        "path": "Contents/Resources/ACE Base 1.6.7.py",
+        "url": "updates/1.6.7/Contents/Resources/ACE%20Bootstrap%201.6.7%20poster%20timing.py",
+        "sha256": "198ba581c1a978f53a3bd85faeffb7c85d19a9f4b47ac780b09b157563a7964c",
+        "mode": "644"
+      },
+      {
+        "path": "Contents/Resources/ACE Bootstrap.py",
+        "url": "updates/1.6.8/Contents/Resources/ACE%20Bootstrap%201.6.8%20poster%20speed.py",
+        "sha256": "95d8b6ebc062c49fefba52092a79abbee79160c97f494da12c4bfcfb9314d3f6",
+        "mode": "644"
+      },
+      {
+        "path": "Contents/Info.plist",
+        "url": "updates/1.6.8/Contents/Info.plist",
+        "sha256": "c4ea86b6abf9e258c89fba1f2b39dd21381137b76a9be28b6ab58613f83095b6",
+        "mode": "644"
+      }
+    ]
+  }
+}
