@@ -1,25 +1,31 @@
 {
-  "version": "1.6.4",
-  "notes": "SearXNG-first research. Ordinary factual questions now use SearXNG as the primary search backend instead of A.C.E. scraping Google, Bing and DuckDuckGo and opening several websites itself. A.C.E. keeps 3 to 5 distinct SearXNG result sources, sends only compact snippets to Qwen in /no_think mode, and remembers the exact source URLs so a follow-up source request can return them immediately. Configured/private SearXNG and localhost are preferred, with conservative public-instance fallbacks; the old crawler is emergency fallback only. Existing theme, voice, controls and artifact behavior remain intact.",
+  "version": "1.6.5",
+  "notes": "Managed private SearXNG. A.C.E. now owns its own pinned SearXNG runtime with no Docker, Terminal setup or separately launched search app. On the first launch after this update, A.C.E. quietly prepares a private SearXNG environment in its Application Support folder, then starts and health-checks it automatically on 127.0.0.1:8888 for future research. Normal research uses this localhost service first; public SearXNG is emergency fallback only. Existing source recall, forest/lime theme, voice, controls and artifact behavior remain intact.",
   "patch": {
-    "base": "1.6.3",
+    "base": "1.6.4",
     "files": [
       {
-        "path": "Contents/Resources/ACE Base 1.6.3.py",
-        "url": "updates/1.6.3/Contents/Resources/ACE%20Bootstrap%201.6.3%20instant%20research.py",
-        "sha256": "8e50a45bc4914c8e841d206e84115db9f55fe023f51c4b034eabca137633a1f5",
-        "mode": "644"
-      },
-      {
-        "path": "Contents/Resources/ACE Bootstrap.py",
+        "path": "Contents/Resources/ACE Base 1.6.4.py",
         "url": "updates/1.6.4/Contents/Resources/ACE%20Bootstrap%201.6.4%20searxng.py",
         "sha256": "6689f554084315c0e1c9a4426cfb15c32de52465304127830e28d20efe3b3d51",
         "mode": "644"
       },
       {
+        "path": "Contents/Resources/ACE SearXNG Manager.py",
+        "url": "updates/1.6.5/Contents/Resources/ACE%20SearXNG%20Manager.py",
+        "sha256": "79e02c12653ad7c42c6d64f4ae01178cd54c86e8299b733b08d19654dd98807f",
+        "mode": "644"
+      },
+      {
+        "path": "Contents/Resources/ACE Bootstrap.py",
+        "url": "updates/1.6.5/Contents/Resources/ACE%20Bootstrap%201.6.5%20embedded%20searxng.py",
+        "sha256": "a1caf4b710361c8f87f89ad7bad1f606a8e0ff02d5a06c6b969c97c236ba83ac",
+        "mode": "644"
+      },
+      {
         "path": "Contents/Info.plist",
-        "url": "updates/1.6.4/Contents/Info.plist",
-        "sha256": "b9b2c353db30012ce583c63a2ab7f6a373df07755a5d285cb8738a6dc848ad56",
+        "url": "updates/1.6.5/Contents/Info.plist",
+        "sha256": "b1b462dc72d0ee64de6749c5e8b603869cb8b7e577293d458ef45adb01e6e716",
         "mode": "644"
       }
     ]
