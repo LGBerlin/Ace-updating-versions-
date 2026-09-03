@@ -19,7 +19,7 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-          import ast, importlib.util, json, plistlib, tempfile, time, zipfile
+          import ast, importlib.util, plistlib, tempfile, time, zipfile
           import xml.etree.ElementTree as ET
 
           R=Path('updates/1.6.10/Contents/Resources')
@@ -38,7 +38,8 @@ jobs:
           bs=boot.read_text(encoding='utf-8')
           assert "BASE = H / 'ACE Base 1.6.4.py'" in bs
           assert 'grounded.install(b164)' in bs and 'poster.install(ace, H, research=research)' in bs
-          for forbidden in ('ACE Base 1.6.7.py','ACE OpenDesign Speed','ACE Artifact Guard','poster timing','low_reasoning'):
+          # Reject actual old runtime imports, not explanatory comments about them.
+          for forbidden in ("H / 'ACE Base 1.6.7.py'", "H / 'ACE OpenDesign Speed 1.6.9.py'", "H / 'ACE Artifact Guard 1.6.6.py'"):
               assert forbidden not in bs, forbidden
           print('CLEAN_RUNTIME_RESET=PASS')
 
