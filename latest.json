@@ -1,31 +1,37 @@
 {
-  "version": "1.6.9",
-  "notes": "Poster launch-path speed fix. 1.6.8 targeted the wrong OpenDesign helper, so low reasoning never reached the actual poster run. 1.6.9 supersedes that ineffective wrapper and intercepts only A.C.E.'s real local OpenDesign streaming POST /api/chat launch when agentId is codex, the project is an ace_* project and a poster job is active, injecting reasoning=low there. The 1.6.7 poster timer remains enabled. Docker SearXNG search, Ollama chat, poster Preview/Edit, save/export, voice, theme, Stop and source recall remain unchanged.",
+  "version": "1.6.10",
+  "notes": "Integrated stabilization rebuild. The installed 1.6.9 updater moves to 1.6.10, but the active runtime deliberately resets to the proven 1.6.4 SearXNG/Qwen/Pocket-TTS line instead of importing the failed 1.6.7-1.6.9 poster timing and speed wrappers. Research keeps local Docker SearXNG first, then opens the selected source pages concurrently and gives Qwen strict query-relevant evidence so unsupported names, numbers, dates and other specifics must not be invented. Poster creation now bypasses OpenDesign/Codex: one short local Qwen planning pass feeds a deterministic local renderer that creates a unique SVG Preview and a native-text/native-shape PPTX. Unique per-job paths prevent stale previews. Normal chat, qwen3.5:4b selection, Pocket TTS, forest/lime theme, Stop, source recall and non-poster artifact behavior remain inherited from the 1.6.4 chain. In-app poster Edit is intentionally deferred for a separate focused rebuild.",
   "patch": {
-    "base": "1.6.8",
+    "base": "1.6.9",
     "files": [
       {
-        "path": "Contents/Resources/ACE Base 1.6.7.py",
-        "url": "updates/1.6.7/Contents/Resources/ACE%20Bootstrap%201.6.7%20poster%20timing.py",
-        "sha256": "198ba581c1a978f53a3bd85faeffb7c85d19a9f4b47ac780b09b157563a7964c",
+        "path": "Contents/Resources/ACE Base 1.6.4.py",
+        "url": "updates/1.6.4/Contents/Resources/ACE%20Bootstrap%201.6.4%20searxng.py",
+        "sha256": "6689f554084315c0e1c9a4426cfb15c32de52465304127830e28d20efe3b3d51",
         "mode": "644"
       },
       {
-        "path": "Contents/Resources/ACE OpenDesign Speed 1.6.9.py",
-        "url": "updates/1.6.9/Contents/Resources/ACE%20OpenDesign%20Speed%201.6.9.py",
-        "sha256": "b16b2ddbe00dc61c890062ae541fe041d9decee9052d8fc1b6a3b7892024c5c3",
+        "path": "Contents/Resources/ACE Grounded Research 1.6.10.py",
+        "url": "updates/1.6.10/Contents/Resources/ACE%20Grounded%20Research%201.6.10.py",
+        "sha256": "90ad2d01ca11e7c5a6bb15750846f0851f0c24e8b8947a465283c3c8fd135945",
+        "mode": "644"
+      },
+      {
+        "path": "Contents/Resources/ACE Local Poster 1.6.10.py",
+        "url": "updates/1.6.10/Contents/Resources/ACE%20Local%20Poster%201.6.10.py",
+        "sha256": "84158ba66182fe93b8ce7e4be37894378a98f655dda5b4d78e3936fe69d87203",
         "mode": "644"
       },
       {
         "path": "Contents/Resources/ACE Bootstrap.py",
-        "url": "updates/1.6.9/Contents/Resources/ACE%20Bootstrap%201.6.9%20poster%20launch.py",
-        "sha256": "b0b3f112ad4fe2673bdd362d3ff9268f2be864af168cbc6d502f3f0f33a0b7b3",
+        "url": "updates/1.6.10/Contents/Resources/ACE%20Bootstrap%201.6.10%20integration.py",
+        "sha256": "1a30010f712f02d1441cb8c4a82c8bff9a5efca818ccc80c07a06b220800464c",
         "mode": "644"
       },
       {
         "path": "Contents/Info.plist",
-        "url": "updates/1.6.9/Contents/Info.plist",
-        "sha256": "640f3ae7536beccc674226ee65e6390abd64e7e64992f469cbaa833b44f41a57",
+        "url": "updates/1.6.10/Contents/Info.plist",
+        "sha256": "b12da6490385782e8eca2d6a73fdffb9455aee8c72f06f1b0058836d4cce603c",
         "mode": "644"
       }
     ]
