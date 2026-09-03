@@ -1,7 +1,6 @@
 {
   "version": "1.6.0",
   "notes": "Color-system refresh only. Replaces A.C.E.'s existing dark-blue/cyan theme with the supplied forest-green/lime reference palette by rewriting color values directly inside the existing stylesheet. No overlay UI, no new shell, no layout changes, and no button or event-handler logic changes. The complete A.C.E. 1.5.9 brain, research, voice, Stop, Preview/Edit, artifact generation and updater behavior remain the functional base.",
-  "cache_bust": "2026-09-03T11:33:00+02:00",
   "patch": {
     "base": "1.5.9",
     "files": [
