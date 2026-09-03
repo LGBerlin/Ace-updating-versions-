@@ -1,19 +1,19 @@
 {
-  "version": "1.5.6",
-  "notes": "Adds a ChatGPT-style Stop control in the composer that cuts off A.C.E. speech and current work, and replaces the broken Preview Edit behavior with a real PPTX-backed poster editor for moving objects and rewriting text before Download/Export.",
+  "version": "1.5.7",
+  "notes": "Adds an intent-first chat gate so examples, mentions and behaviour/style feedback stay in normal chat unless the user clearly asks for an artifact, and makes ordinary A.C.E. replies more natural, casual and concise without adding a second model pass.",
   "patch": {
-    "base": "1.5.5",
+    "base": "1.5.6",
     "files": [
       {
         "path": "Contents/Resources/ACE Bootstrap.py",
-        "url": "updates/1.5.6/Contents/Resources/ACE%20Bootstrap%20final.py",
-        "sha256": "2a1fdceddaa2b6cf703d0ed4480423dd878b31bdde1554d37cb08846922135de",
+        "url": "updates/1.5.7/Contents/Resources/ACE%20Bootstrap.py",
+        "sha256": "9d9899d95a7804c7449534fb3ebf3730eece5715c70beafd145552158615d1ac",
         "mode": "644"
       },
       {
         "path": "Contents/Info.plist",
-        "url": "updates/1.5.6/Contents/Info.plist",
-        "sha256": "716291ed5c1c677965176e45110323b820244aa8d0b4addbdbb3af0501cb858e",
+        "url": "updates/1.5.7/Contents/Info.plist",
+        "sha256": "fcee645dea57ed3fe56b7ae13b4952a49a2be62636af110e8d5a84f8547425fc",
         "mode": "644"
       }
     ]
