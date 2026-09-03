@@ -1,32 +1,26 @@
 {
-  "version": "1.5.9",
-  "notes": "Restores and upgrades live web research across A.C.E. Factual questions, game questions, school/research questions, and factual posters/presentations now trigger multi-source research before A.C.E. answers or builds. Google is attempted first, with Bing and DuckDuckGo as additional/fallback discovery engines; A.C.E. then opens several distinct result pages, cross-checks the evidence, prefers primary/official sources, and avoids pretending it verified facts when live research fails.",
-  "cache_bust": "2026-09-03T11:18:00+02:00",
+  "version": "1.6.0",
+  "notes": "Color-system refresh only. Replaces A.C.E.'s existing dark-blue/cyan theme with the supplied forest-green/lime reference palette by rewriting color values directly inside the existing stylesheet. No overlay UI, no new shell, no layout changes, and no button or event-handler logic changes. The complete A.C.E. 1.5.9 brain, research, voice, Stop, Preview/Edit, artifact generation and updater behavior remain the functional base.",
+  "cache_bust": "2026-09-03T11:33:00+02:00",
   "patch": {
-    "base": "1.5.8",
+    "base": "1.5.9",
     "files": [
       {
-        "path": "Contents/Resources/ACE Base 1.5.7.py",
-        "url": "updates/1.5.7/Contents/Resources/ACE%20Bootstrap.py",
-        "sha256": "9d9899d95a7804c7449534fb3ebf3730eece5715c70beafd145552158615d1ac",
-        "mode": "644"
-      },
-      {
-        "path": "Contents/Resources/ACE Base 1.5.8.py",
-        "url": "updates/1.5.8/Contents/Resources/ACE%20Bootstrap%201.5.8%20final.py",
-        "sha256": "86b34b4e16841ecb4717fde0676b30cd4d4dd8ba0156f2dfea81b52e7a1aad17",
-        "mode": "644"
-      },
-      {
-        "path": "Contents/Resources/ACE Bootstrap.py",
+        "path": "Contents/Resources/ACE Base 1.5.9.py",
         "url": "updates/1.5.9/Contents/Resources/ACE%20Bootstrap%201.5.9%20web.py",
         "sha256": "5b645f5f53bfab02dc874a68d1418e2c323a2fe7ec2a4d5044a42b863691c6b2",
         "mode": "644"
       },
       {
+        "path": "Contents/Resources/ACE Bootstrap.py",
+        "url": "updates/1.6.0/Contents/Resources/ACE%20Bootstrap%201.6.0%20theme.py",
+        "sha256": "c5053584aa7a3c0c5a48bb05f3143f3160be3ac6b50465b0ea4c2b8b7bab438e",
+        "mode": "644"
+      },
+      {
         "path": "Contents/Info.plist",
-        "url": "updates/1.5.9/Contents/Info.plist",
-        "sha256": "e87ced1dc89cc9ddd7085eab11c0abe12080bb37f1d81270a424198c8167cbbb",
+        "url": "updates/1.6.0/Contents/Info.plist",
+        "sha256": "b42d27c2fea8de8f309ae2f9b5870698ebe2b907f02ca12a1cacc39079aa6e76",
         "mode": "644"
       }
     ]
