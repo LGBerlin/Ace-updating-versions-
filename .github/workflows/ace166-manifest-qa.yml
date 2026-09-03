@@ -1,0 +1,46 @@
+name: ACE 1.6.6 Manifest QA
+
+on:
+  push:
+    paths:
+      - 'updates/1.6.6/**'
+      - '.github/workflows/ace166-manifest-qa.yml'
+  workflow_dispatch:
+
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify 1.6.6 manifest package bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          m=json.loads(Path('updates/1.6.6/manifest.json').read_text())
+          assert set(m)=={'version','notes','patch'}
+          assert m['version']=='1.6.6' and m['patch']['base']=='1.6.5'
+          url_to_local={
+            'updates/1.6.4/Contents/Resources/ACE%20Bootstrap%201.6.4%20searxng.py': Path('updates/1.6.4/Contents/Resources/ACE Bootstrap 1.6.4 searxng.py'),
+            'updates/1.6.6/Contents/Resources/ACE%20Artifact%20Guard%201.6.6.py': Path('updates/1.6.6/Contents/Resources/ACE Artifact Guard 1.6.6.py'),
+            'updates/1.6.6/Contents/Resources/ACE%20Bootstrap%201.6.6%20regression.py': Path('updates/1.6.6/Contents/Resources/ACE Bootstrap 1.6.6 regression.py'),
+            'updates/1.6.6/Contents/Info.plist': Path('updates/1.6.6/Contents/Info.plist'),
+          }
+          expected_paths={
+            'Contents/Resources/ACE Base 1.6.4.py',
+            'Contents/Resources/ACE Artifact Guard 1.6.6.py',
+            'Contents/Resources/ACE Bootstrap.py',
+            'Contents/Info.plist',
+          }
+          files=m['patch']['files']
+          assert {x['path'] for x in files}==expected_paths
+          for x in files:
+              p=url_to_local[x['url']]
+              actual=hashlib.sha256(p.read_bytes()).hexdigest()
+              assert actual==x['sha256'], (p,actual,x['sha256'])
+              assert x['mode']=='644'
+              print('MANIFEST_SHA256=PASS',x['path'],actual)
+          print('ACE166_MANIFEST_QA=PASS')
+          PY
