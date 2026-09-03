@@ -1,0 +1,142 @@
+name: ACE 1.6.6 Regression QA
+
+on:
+  push:
+    paths:
+      - 'updates/1.6.6/**'
+      - '.github/workflows/ace166-regression-qa.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate search + poster + preview regression set
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import ast, hashlib, importlib.util, plistlib, tempfile, zipfile
+
+          root=Path('.')
+          guard=root/'updates/1.6.6/Contents/Resources/ACE Artifact Guard 1.6.6.py'
+          boot=root/'updates/1.6.6/Contents/Resources/ACE Bootstrap 1.6.6 regression.py'
+          base=root/'updates/1.6.4/Contents/Resources/ACE Bootstrap 1.6.4 searxng.py'
+          plist=root/'updates/1.6.6/Contents/Info.plist'
+
+          for p in (guard,boot,base):
+              src=p.read_text(encoding='utf-8')
+              ast.parse(src, filename=str(p)); compile(src,str(p),'exec')
+
+          bs=boot.read_text(encoding='utf-8')
+          gs=guard.read_text(encoding='utf-8')
+          assert "BASE = H / 'ACE Base 1.6.4.py'" in bs
+          assert "LOCAL_SEARXNG = 'http://127.0.0.1:8888'" in bs
+          assert "out = [LOCAL_SEARXNG]" in bs
+          assert 'ACE SearXNG Manager.py' not in bs
+          assert 'guard.install_backend(ace)' in bs and 'guard.patch_frontend(H)' in bs
+          assert "'/api/studio/shapes'" in gs and "'/api/studio/save'" in gs
+          assert "'/Applications/Open Design.app'" in gs
+          assert "'/tmp/open-design/ipc/release-stable/daemon.sock'" in gs
+          assert "['/usr/bin/open', '-g', '-j', str(APP), '--args', '--headless']" in gs
+          assert "closest('#studioEdit')" in gs
+          assert "String(studioJob.kind||'')==='poster'" in gs
+
+          pl=plistlib.loads(plist.read_bytes())
+          assert pl['CFBundleShortVersionString']=='1.6.6'
+          assert pl['CFBundleVersion']=='1.6.6'
+
+          spec=importlib.util.spec_from_file_location('ace_guard_qa',str(guard))
+          g=importlib.util.module_from_spec(spec);spec.loader.exec_module(g)
+          P='http://schemas.openxmlformats.org/presentationml/2006/main'
+          A='http://schemas.openxmlformats.org/drawingml/2006/main'
+          pres=f'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:presentation xmlns:p="{P}"><p:sldSz cx="1000000" cy="500000"/></p:presentation>'''
+          slide=f'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:sld xmlns:p="{P}" xmlns:a="{A}"><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name="Group"/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/><p:sp><p:nvSpPr><p:cNvPr id="2" name="Title"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="100000" y="50000"/><a:ext cx="500000" cy="100000"/></a:xfrm></p:spPr><p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>Hello</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>'''
+
+          with tempfile.TemporaryDirectory() as td:
+              td=Path(td); ppt=td/'poster.pptx'
+              with zipfile.ZipFile(ppt,'w',zipfile.ZIP_DEFLATED) as z:
+                  z.writestr('ppt/presentation.xml',pres)
+                  z.writestr('ppt/slides/slide1.xml',slide)
+                  z.writestr('[Content_Types].xml','<Types/>')
+              shapes=g.poster_shapes(ppt)
+              assert len(shapes)==1 and shapes[0]['id']=='2' and shapes[0]['text']=='Hello'
+              c=dict(shapes[0],x=.2,y=.2,w=.4,h=.2,text='Updated\nText')
+              g.write_poster(ppt,[c])
+              after=g.poster_shapes(ppt)[0]
+              assert after['text']=='Updated\nText'
+              assert (round(after['x'],3),round(after['y'],3),round(after['w'],3),round(after['h'],3))==(.2,.2,.4,.2)
+              print('POSTER_PPTX_EDIT=PASS')
+
+              ui=td/'ui';ui.mkdir()
+              (ui/'app.js').write_text('(()=>{let studioJob={kind:"poster"};})();\n',encoding='utf-8')
+              (ui/'app.css').write_text('body{}\n',encoding='utf-8')
+              (ui/'index.html').write_text('<script src="app.js?v=165"></script><link rel="stylesheet" href="app.css?v=165"><div>Current version: v1.6.5</div>',encoding='utf-8')
+              g.patch_frontend(ui)
+              hashes1={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in ui.iterdir()}
+              g.patch_frontend(ui)
+              hashes2={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in ui.iterdir()}
+              assert hashes1==hashes2
+              js=(ui/'app.js').read_text(); css=(ui/'app.css').read_text(); idx=(ui/'index.html').read_text()
+              assert js.count(g.MARKER)==1 and css.count(g.MARKER)==1
+              assert 'app.js?v=166-regression' in idx and 'app.css?v=166-regression' in idx
+              assert 'Current version: v1.6.6' in idx
+              print('PREVIEW_EDITOR_PATCH=PASS')
+
+          for p in (base,guard,boot,plist):
+              print('SHA256',p,hashlib.sha256(p.read_bytes()).hexdigest())
+          print('STATIC_AND_ARTIFACT_QA=PASS')
+          PY
+
+      - name: Verify real localhost SearXNG search contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ace166-searxng
+          cat >/tmp/ace166-searxng/settings.yml <<'YAML'
+          use_default_settings: true
+          general:
+            debug: false
+            instance_name: "A.C.E. Search QA"
+            enable_metrics: false
+          search:
+            safe_search: 0
+            autocomplete: ""
+            formats:
+              - html
+              - json
+          server:
+            secret_key: "ace166-qa-not-production"
+            limiter: false
+            public_instance: false
+            image_proxy: false
+          valkey:
+            url: false
+          outgoing:
+            request_timeout: 2.0
+            max_request_timeout: 3.0
+          YAML
+          docker pull ghcr.io/searxng/searxng:2026.8.29-d226b78bc
+          docker run -d --name ace166-searxng -p 127.0.0.1:8888:8080 -v /tmp/ace166-searxng:/etc/searxng ghcr.io/searxng/searxng:2026.8.29-d226b78bc
+          trap 'docker rm -f ace166-searxng >/dev/null 2>&1 || true' EXIT
+          ready=0
+          for _i in $(seq 1 45); do
+            if curl -fsS --max-time 1 http://127.0.0.1:8888/config >/tmp/ace166-config.json; then ready=1; break; fi
+            sleep .25
+          done
+          test "$ready" = 1
+          start=$(python3 -c 'import time;print(time.time())')
+          curl -fsS --max-time 8 'http://127.0.0.1:8888/search?q=capital+of+France&format=json' >/tmp/ace166-search.json
+          end=$(python3 -c 'import time;print(time.time())')
+          python3 - <<PY
+          import json
+          start=float('$start'); end=float('$end')
+          d=json.load(open('/tmp/ace166-search.json'))
+          assert isinstance(d.get('results'),list) and len(d['results'])>=3
+          print('LOCALHOST_SEARXNG=PASS results=',len(d['results']),'seconds=',round(end-start,3))
+          PY
+          echo 'ACE166_REGRESSION_QA=PASS'
