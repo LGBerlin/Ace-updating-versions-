@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "notes": "A.C.E. upgrade graph reset at 1.5.9. Releases after 1.5.9 have been retired. The next release will be a new 1.6.0 built fresh from 1.5.9.",
+  "notes": "A.C.E. upgrade graph reset at 1.5.9. The retired post-1.5.9 branch is not used. The new 1.6.0 is a fresh color-system-only release built directly on 1.5.9.",
   "routes": {
     "1.5.5": {
       "version": "1.5.6",
@@ -17,6 +17,10 @@
     "1.5.8": {
       "version": "1.5.9",
       "manifest_url": "https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/0bf3d68b638b3678ade2bcb00b5a551d6d55178c/latest.json"
+    },
+    "1.5.9": {
+      "version": "1.6.0",
+      "manifest_url": "https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/main/updates/1.6.0/manifest.json"
     }
   }
 }
