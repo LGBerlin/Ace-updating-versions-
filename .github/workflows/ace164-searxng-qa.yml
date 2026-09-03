@@ -30,19 +30,19 @@ jobs:
           assert "r159._research = _research_searxng" in src
           assert "r159._evidence_block = _searx_evidence_block" in src
           assert "MIN_SOURCES = 3" in src and "MAX_SOURCES = 5" in src
-          assert "'/no_think'" not in src or '/no_think' in src
+          assert '/no_think' in src
           assert "_SOURCE_REQUEST" in src and "_remembered_sources" in src
           assert "search.inetol.net" in src
           assert "127.0.0.1:8888" in src
           assert "_FALLBACK_RESEARCH = r159._research" in src
-          assert "_patch_file" not in src or "app.js" not in src
+          assert "app.js" not in src
 
           manifest=json.loads((root/'updates/1.6.4/manifest.json').read_text())
           assert manifest['version']=='1.6.4'
           assert manifest['patch']['base']=='1.6.3'
           expected={
             'Contents/Resources/ACE Base 1.6.3.py':'8e50a45bc4914c8e841d206e84115db9f55fe023f51c4b034eabca137633a1f5',
-            'Contents/Resources/ACE Bootstrap.py':'5aeccad10ba2898afcb2a338131b569c2c91af30c1c13825c68c4bdf2cf81395',
+            'Contents/Resources/ACE Bootstrap.py':'6689f554084315c0e1c9a4426cfb15c32de52465304127830e28d20efe3b3d51',
             'Contents/Info.plist':'b9b2c353db30012ce583c63a2ab7f6a373df07755a5d285cb8738a6dc848ad56',
           }
           assert {x['path']:x['sha256'] for x in manifest['patch']['files']}==expected
@@ -59,7 +59,6 @@ jobs:
           assert pl['CFBundleShortVersionString']=='1.6.4'
           assert pl['CFBundleVersion']=='1.6.4'
 
-          # Execute only the standalone result parsers from the release source.
           wanted={'_clean_text','_domain','_result_item','_json_results','_SearxHTML','_html_results'}
           nodes=[]
           for n in tree.body:
@@ -68,7 +67,8 @@ jobs:
               if '_SKIP_HOSTS' in names: nodes.append(n)
             elif isinstance(n,(ast.FunctionDef,ast.ClassDef)) and n.name in wanted:
               nodes.append(n)
-          ns={'re':re,'json':json,'urllib':__import__('urllib'),'HTMLParser':HTMLParser}
+          import urllib
+          ns={'re':re,'json':json,'urllib':urllib,'HTMLParser':HTMLParser}
           exec(compile(ast.Module(body=nodes,type_ignores=[]),'<parser-test>','exec'),ns)
           sample=json.dumps({'results':[
             {'url':'https://a.example/x','title':'A','content':'alpha','engines':['google'],'score':3},
