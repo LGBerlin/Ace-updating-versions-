@@ -1,0 +1,27 @@
+{
+  "version": "1.6.4",
+  "notes": "SearXNG-first research. Ordinary factual questions now use SearXNG as the primary search backend instead of A.C.E. scraping Google, Bing and DuckDuckGo and opening several websites itself. A.C.E. keeps 3 to 5 distinct SearXNG result sources, sends only compact snippets to Qwen in /no_think mode, and remembers the exact source URLs so a follow-up source request can return them immediately. Configured/private SearXNG and localhost are preferred, with conservative public-instance fallbacks; the old crawler is emergency fallback only. Existing theme, voice, controls and artifact behavior remain intact.",
+  "patch": {
+    "base": "1.6.3",
+    "files": [
+      {
+        "path": "Contents/Resources/ACE Base 1.6.3.py",
+        "url": "updates/1.6.3/Contents/Resources/ACE%20Bootstrap%201.6.3%20instant%20research.py",
+        "sha256": "8e50a45bc4914c8e841d206e84115db9f55fe023f51c4b034eabca137633a1f5",
+        "mode": "644"
+      },
+      {
+        "path": "Contents/Resources/ACE Bootstrap.py",
+        "url": "updates/1.6.4/Contents/Resources/ACE%20Bootstrap%201.6.4%20searxng.py",
+        "sha256": "5aeccad10ba2898afcb2a338131b569c2c91af30c1c13825c68c4bdf2cf81395",
+        "mode": "644"
+      },
+      {
+        "path": "Contents/Info.plist",
+        "url": "updates/1.6.4/Contents/Info.plist",
+        "sha256": "b9b2c353db30012ce583c63a2ab7f6a373df07755a5d285cb8738a6dc848ad56",
+        "mode": "644"
+      }
+    ]
+  }
+}
