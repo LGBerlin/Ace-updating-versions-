@@ -1,0 +1,37 @@
+name: ACE 1.6.8 Manifest QA
+
+on:
+  push:
+    paths:
+      - 'updates/1.6.8/**'
+      - '.github/workflows/ace168-manifest-qa.yml'
+  workflow_dispatch:
+
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify 1.6.8 manifest package bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          m=json.loads(Path('updates/1.6.8/manifest.json').read_text())
+          assert set(m)=={'version','notes','patch'}
+          assert m['version']=='1.6.8' and m['patch']['base']=='1.6.7'
+          mapping={
+            'updates/1.6.7/Contents/Resources/ACE%20Bootstrap%201.6.7%20poster%20timing.py': Path('updates/1.6.7/Contents/Resources/ACE Bootstrap 1.6.7 poster timing.py'),
+            'updates/1.6.8/Contents/Resources/ACE%20Bootstrap%201.6.8%20poster%20speed.py': Path('updates/1.6.8/Contents/Resources/ACE Bootstrap 1.6.8 poster speed.py'),
+            'updates/1.6.8/Contents/Info.plist': Path('updates/1.6.8/Contents/Info.plist'),
+          }
+          for item in m['patch']['files']:
+              p=mapping[item['url']]
+              actual=hashlib.sha256(p.read_bytes()).hexdigest()
+              assert actual==item['sha256'], (p,actual,item['sha256'])
+              assert item['mode']=='644'
+              print('MANIFEST_SHA256=PASS',item['path'],actual)
+          print('ACE168_MANIFEST_QA=PASS')
+          PY
