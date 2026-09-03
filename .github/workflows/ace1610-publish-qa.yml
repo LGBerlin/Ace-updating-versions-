@@ -1,0 +1,42 @@
+name: ACE 1.6.10 Publish QA
+
+on:
+  push:
+    paths:
+      - 'latest.json'
+      - 'upgrade-index.json'
+      - 'updates/1.6.10/manifest.json'
+      - '.github/workflows/ace1610-publish-qa.yml'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify live feed and upgrade route
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+
+          latest=json.loads(Path('latest.json').read_text(encoding='utf-8'))
+          manifest=json.loads(Path('updates/1.6.10/manifest.json').read_text(encoding='utf-8'))
+          index=json.loads(Path('upgrade-index.json').read_text(encoding='utf-8'))
+
+          assert set(latest)=={'version','notes','patch'}, set(latest)
+          assert latest==manifest
+          assert latest['version']=='1.6.10'
+          assert latest['patch']['base']=='1.6.9'
+
+          route=index['routes']['1.6.9']
+          assert route['version']=='1.6.10'
+          assert route['manifest_url'].endswith('/updates/1.6.10/manifest.json')
+
+          print('LIVE_SCHEMA=PASS',sorted(latest))
+          print('LATEST_EQUALS_MANIFEST=PASS')
+          print('UPGRADE_ROUTE=PASS',route)
+          print('ACE1610_PUBLISH_QA=PASS')
+          PY
