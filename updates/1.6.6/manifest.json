@@ -1,0 +1,33 @@
+{
+  "version": "1.6.6",
+  "notes": "Regression repair: keeps the now-working Docker SearXNG search path and restores/guards poster design, Preview and PPTX-backed poster editing in the same build. Research now goes directly to the local SearXNG service at 127.0.0.1:8888 first and no longer imports the broken 1.6.5 Python/PyPI SearXNG self-installer. The artifact guard preserves the existing OpenDesign generation path, starts the local Open Design app headlessly when its sidecar is absent, reasserts poster preview generation, and restores the real PowerPoint-backed Edit path without replacing presentation behavior, voice, theme, Stop or source recall.",
+  "patch": {
+    "base": "1.6.5",
+    "files": [
+      {
+        "path": "Contents/Resources/ACE Base 1.6.4.py",
+        "url": "updates/1.6.4/Contents/Resources/ACE%20Bootstrap%201.6.4%20searxng.py",
+        "sha256": "6689f554084315c0e1c9a4426cfb15c32de52465304127830e28d20efe3b3d51",
+        "mode": "644"
+      },
+      {
+        "path": "Contents/Resources/ACE Artifact Guard 1.6.6.py",
+        "url": "updates/1.6.6/Contents/Resources/ACE%20Artifact%20Guard%201.6.6.py",
+        "sha256": "5bb8ae8a0803240238d4245c22826d53503b05922a1130a8562cf87d7d8b10e2",
+        "mode": "644"
+      },
+      {
+        "path": "Contents/Resources/ACE Bootstrap.py",
+        "url": "updates/1.6.6/Contents/Resources/ACE%20Bootstrap%201.6.6%20regression.py",
+        "sha256": "d4e6aa8296c0bb96bbf91f0447a2d1869a296967a6ce222efa48937ab0656106",
+        "mode": "644"
+      },
+      {
+        "path": "Contents/Info.plist",
+        "url": "updates/1.6.6/Contents/Info.plist",
+        "sha256": "32e9246f7b9f342f89a6e88ec719dde01d653e5031fc4373c358655db3c5d0b7",
+        "mode": "644"
+      }
+    ]
+  }
+}
