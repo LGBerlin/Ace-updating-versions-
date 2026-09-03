@@ -15,8 +15,12 @@
       "manifest_url": "https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/602fce8c311e4fbdb8b8ae721e823c6ec1878af1/latest.json"
     },
     "1.5.8": {
+      "version": "1.5.9",
+      "manifest_url": "https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/0bf3d68b638b3678ade2bcb00b5a551d6d55178c/latest.json"
+    },
+    "1.5.9": {
       "version": "1.6.4",
-      "manifest_url": "https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/f6bc60149adcfa124ba90de4e03fc7f48ca60011/latest.json"
+      "manifest_url": "https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/main/bridges/1.5.9-to-1.6.4.json"
     },
     "1.6.4": {
       "version": "1.6.5",
