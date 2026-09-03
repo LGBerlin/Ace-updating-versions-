@@ -1,25 +1,25 @@
 {
-  "version": "1.6.1",
-  "notes": "Fast research release. A.C.E. now normally researches 3 to 5 distinct websites, targeting 4 independent sources, with search discovery and page retrieval running in parallel under short hard time budgets. Slow or irrelevant websites no longer hold the answer open after enough useful evidence has arrived. Existing research caching, source cross-checking, the 1.6.0 forest/lime color scheme, local brain, voice, Stop, Preview/Edit, artifacts and all existing controls remain unchanged.",
+  "version": "1.6.2",
+  "notes": "Low-latency research release. Keeps A.C.E.'s 3 to 5 independent website cross-check, but shortens research hard budgets and compresses each page to the most query-relevant evidence before the local model reads it. Four-source evidence is reduced by about 69% versus 1.6.1, cutting prompt-processing delay while preserving source diversity. The 1.6.1 non-blocking research scheduler, 1.6.0 forest/lime theme, local brain, voice, Stop, Preview/Edit, artifact generation and existing controls remain intact.",
   "patch": {
-    "base": "1.6.0",
+    "base": "1.6.1",
     "files": [
       {
-        "path": "Contents/Resources/ACE Base 1.6.0.py",
-        "url": "updates/1.6.0/Contents/Resources/ACE%20Bootstrap%201.6.0%20theme.py",
-        "sha256": "c5053584aa7a3c0c5a48bb05f3143f3160be3ac6b50465b0ea4c2b8b7bab438e",
-        "mode": "644"
-      },
-      {
-        "path": "Contents/Resources/ACE Bootstrap.py",
+        "path": "Contents/Resources/ACE Base 1.6.1.py",
         "url": "updates/1.6.1/Contents/Resources/ACE%20Bootstrap%201.6.1%20fast%20research.py",
         "sha256": "14211a914e3ea064171bcc243a4b8adfb31ed8d57bf868fc890fa8e6633349cf",
         "mode": "644"
       },
       {
+        "path": "Contents/Resources/ACE Bootstrap.py",
+        "url": "updates/1.6.2/Contents/Resources/ACE%20Bootstrap%201.6.2%20low%20latency.py",
+        "sha256": "e5b83c3a574d7d33f12f5dfaee5fd4d824aafd5070623a1285831c413a6a1a2b",
+        "mode": "644"
+      },
+      {
         "path": "Contents/Info.plist",
-        "url": "updates/1.6.1/Contents/Info.plist",
-        "sha256": "948646553faba95a63f41573f4c03751daa0c01f292d784a2f753cb8961f0b1c",
+        "url": "updates/1.6.2/Contents/Info.plist",
+        "sha256": "58feecfb62ba877f82325d29d7418fb38e733093e95fc621e80758a66b4ef9e9",
         "mode": "644"
       }
     ]
