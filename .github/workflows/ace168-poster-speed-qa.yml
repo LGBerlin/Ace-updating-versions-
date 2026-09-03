@@ -1,0 +1,80 @@
+name: ACE 1.6.8 Poster Speed QA
+
+on:
+  push:
+    paths:
+      - 'updates/1.6.8/**'
+      - '.github/workflows/ace168-poster-speed-qa.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate narrow poster speed profile
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import ast, hashlib, plistlib
+
+          boot=Path('updates/1.6.8/Contents/Resources/ACE Bootstrap 1.6.8 poster speed.py')
+          base=Path('updates/1.6.7/Contents/Resources/ACE Bootstrap 1.6.7 poster timing.py')
+          base166=Path('updates/1.6.6/Contents/Resources/ACE Bootstrap 1.6.6 regression.py')
+          guard=Path('updates/1.6.6/Contents/Resources/ACE Artifact Guard 1.6.6.py')
+          plist=Path('updates/1.6.8/Contents/Info.plist')
+
+          for p in (boot,base,base166,guard):
+              src=p.read_text(encoding='utf-8'); ast.parse(src); compile(src,str(p),'exec')
+
+          s=boot.read_text(encoding='utf-8')
+          assert "BASE = H / 'ACE Base 1.6.7.py'" in s
+          assert "body['reasoning'] = 'low'" in s
+          assert "str(path).split('?', 1)[0] == '/api/chat'" in s
+          assert "str(job.get('kind') or '').lower() != 'poster'" in s
+          assert "POSTER SPEED profile=low_reasoning endpoint=/api/chat" in s
+          # No research or artifact-edit route replacement in this release.
+          assert 'r159._research =' not in s
+          assert 'LOCAL_SEARXNG' not in s
+          assert '/api/studio/save' not in s
+          assert '/api/studio/shapes' not in s
+          assert 'patch_frontend' not in s
+
+          # Regression-safe base still carries both search and poster guard.
+          b166=base166.read_text(encoding='utf-8')
+          assert "LOCAL_SEARXNG = 'http://127.0.0.1:8888'" in b166
+          assert 'guard.install_backend(ace)' in b166 and 'guard.patch_frontend(H)' in b166
+          gs=guard.read_text(encoding='utf-8')
+          assert "'/api/studio/save'" in gs and "'/api/studio/shapes'" in gs
+
+          # 1.6.7 timer remains in the base.
+          bs=base.read_text(encoding='utf-8')
+          assert 'ACE167_POSTER_TIMER' in bs and 'ACE-Poster-Timing.log' in bs
+
+          # Validate the payload transform logic independently.
+          def transform(method,path,args,active=True):
+              next_args=args; applied=False
+              if str(method).upper()=='POST' and str(path).split('?',1)[0]=='/api/chat':
+                  if args and isinstance(args[0],dict):
+                      body=dict(args[0])
+                      text=str(body).lower()
+                      explicit=any('poster' in str(body.get(k,'')).lower() for k in ('kind','artifact_kind','artifactKind','type','mode','skillId','skill_id'))
+                      if explicit or (active and 'poster' in text):
+                          body['reasoning']='low'; next_args=(body,)+args[1:]; applied=True
+              return next_args,applied
+          out,applied=transform('POST','/api/chat',({'kind':'poster','message':'make it'},))
+          assert applied and out[0]['reasoning']=='low'
+          out,applied=transform('POST','/api/chat',({'kind':'presentation','message':'make slides'},),active=False)
+          assert not applied and 'reasoning' not in out[0]
+          out,applied=transform('GET','/api/chat',({'kind':'poster'},))
+          assert not applied
+
+          pl=plistlib.loads(plist.read_bytes())
+          assert pl['CFBundleShortVersionString']=='1.6.8' and pl['CFBundleVersion']=='1.6.8'
+          for p in (base,boot,plist):
+              print('SHA256',p,hashlib.sha256(p.read_bytes()).hexdigest())
+          print('ACE168_POSTER_SPEED_QA=PASS')
+          PY
