@@ -1,6 +1,7 @@
 {
   "version": "1.5.8",
   "notes": "Fixes the poster Preview Edit infinite loop by routing Edit directly into the real PPTX-backed poster editor, while preserving the 1.5.7 intent-first chat improvements. The corrected package includes the 1.5.7 runtime as an internal dependency and uses matching integrity hashes for every downloaded file.",
+  "cache_bust": "2026-09-03T10:14:00+02:00",
   "patch": {
     "base": "1.5.7",
     "files": [
