@@ -19,7 +19,7 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-          import ast, hashlib, plistlib, re
+          import ast, hashlib, plistlib
           root=Path('.')
           mgr=root/'updates/1.6.5/Contents/Resources/ACE SearXNG Manager.py'
           boot=root/'updates/1.6.5/Contents/Resources/ACE Bootstrap 1.6.5 embedded searxng.py'
@@ -30,12 +30,14 @@ jobs:
               ast.parse(src, filename=str(p)); compile(src,str(p),'exec')
           ms=mgr.read_text(); bs=boot.read_text()
           assert "PIN = '8f452ee89293d9a752a776f4c33f5a5f124fff97'" in ms
-          assert "PACKAGE_URL = f'https://github.com/searxng/searxng/archive/{PIN}.tar.gz'" in ms
+          assert "SOURCE_URL = f'https://github.com/searxng/searxng/archive/{PIN}.tar.gz'" in ms
+          assert "SOURCE = ROOT / 'source'" in ms
           assert "LOCAL_URL = 'http://127.0.0.1:8888'" in ms
           assert "SEARXNG_SETTINGS_PATH" in ms
           assert "'-m', 'searx.webapp'" in ms
           assert "'/config'" in ms
-          assert "pip', 'install'" in ms
+          assert "requirements.txt" in ms
+          assert "_safe_extract" in ms
           assert "BASE = H / 'ACE Base 1.6.4.py'" in bs
           assert "MANAGER = H / 'ACE SearXNG Manager.py'" in bs
           assert "ace.VERSION = '1.6.5'" in bs
@@ -50,10 +52,13 @@ jobs:
           PY
 
           PIN=8f452ee89293d9a752a776f4c33f5a5f124fff97
-          rm -rf /tmp/ace165-venv /tmp/ace165-settings.yml /tmp/ace165-searx.log
+          rm -rf /tmp/ace165-venv /tmp/ace165-src /tmp/ace165-settings.yml /tmp/ace165-searx.log /tmp/ace165.tar.gz
           python3 -m venv /tmp/ace165-venv
-          PIP_DISABLE_PIP_VERSION_CHECK=1 /tmp/ace165-venv/bin/python -m pip install --prefer-binary --no-input "https://github.com/searxng/searxng/archive/${PIN}.tar.gz"
-          /tmp/ace165-venv/bin/python - <<'PY'
+          curl -fsSL --max-time 30 "https://github.com/searxng/searxng/archive/${PIN}.tar.gz" -o /tmp/ace165.tar.gz
+          mkdir -p /tmp/ace165-src
+          tar -xzf /tmp/ace165.tar.gz -C /tmp/ace165-src --strip-components=1
+          PIP_DISABLE_PIP_VERSION_CHECK=1 /tmp/ace165-venv/bin/python -m pip install --prefer-binary --no-input -r /tmp/ace165-src/requirements.txt
+          PYTHONPATH=/tmp/ace165-src /tmp/ace165-venv/bin/python - <<'PY'
           import searx
           print('SEARX_IMPORT=PASS', searx.__file__)
           PY
@@ -86,11 +91,12 @@ jobs:
           SEARXNG_SETTINGS_PATH=/tmp/ace165-settings.yml \
           SEARXNG_BIND_ADDRESS=127.0.0.1 SEARXNG_PORT=8888 \
           SEARXNG_LIMITER=false SEARXNG_PUBLIC_INSTANCE=false \
+          PYTHONPATH=/tmp/ace165-src \
           /tmp/ace165-venv/bin/python -m searx.webapp >/tmp/ace165-searx.log 2>&1 &
           SX_PID=$!
           trap 'kill $SX_PID 2>/dev/null || true' EXIT
           ready=0
-          for _i in $(seq 1 50); do
+          for _i in $(seq 1 60); do
             if curl -fsS --max-time 1 http://127.0.0.1:8888/config >/tmp/ace165-config.json; then
               ready=1; break
             fi
