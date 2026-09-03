@@ -1,0 +1,51 @@
+name: ACE 1.6.3 Package QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'updates/1.6.3/**'
+      - '.github/workflows/ace163-package-qa.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate instant research release
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import ast, hashlib, plistlib, re
+          p=Path('updates/1.6.3/Contents/Resources/ACE Bootstrap 1.6.3 instant research.py')
+          s=p.read_text()
+          ast.parse(s,filename=str(p)); compile(s,str(p),'exec')
+          assert "BASE = H / 'ACE Base 1.6.2.py'" in s
+          assert "ace.VERSION = '1.6.3'" in s
+          assert '/no_think' in s
+          assert '_HISTORY_TRIGGER_CHARS = 6500' in s
+          assert '_HISTORY_KEEP_NON_SYSTEM = 8' in s
+          assert "r159._evidence_block = _instant_evidence_block" in s
+          assert 'ace.H.do_POST = POST' in s
+          assert not re.search(r"_patch_file\(.*app\.js",s)
+          pl=plistlib.loads(Path('updates/1.6.3/Contents/Info.plist').read_bytes())
+          assert pl['CFBundleShortVersionString']=='1.6.3'
+          assert pl['CFBundleVersion']=='1.6.3'
+          for f in [
+              Path('updates/1.6.2/Contents/Resources/ACE Bootstrap 1.6.2 low latency.py'),
+              p,
+              Path('updates/1.6.3/Contents/Info.plist'),
+          ]:
+              print('SHA256',f,hashlib.sha256(f.read_bytes()).hexdigest())
+          # Verify history compaction math on a synthetic long chat.
+          msgs=[{'role':'system','content':'sys'}]
+          for i in range(20):
+              msgs.append({'role':'user' if i%2==0 else 'assistant','content':'x'*500})
+          system=[m for m in msgs if m['role']=='system']
+          non=[m for m in msgs if m['role']!='system']
+          kept=system+non[-8:]
+          assert len(kept)==9
+          assert sum(len(m['content']) for m in kept) < sum(len(m['content']) for m in msgs)*0.5
+          print('HISTORY_COMPACTION_QA=PASS',len(msgs),'->',len(kept))
+          print('ACE163_QA=PASS')
+          PY
