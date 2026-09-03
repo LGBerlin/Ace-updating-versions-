@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "notes": "Version-aware A.C.E. safe upgrade graph. Each installed version is offered only its next compatible verified package. Cumulative releases are used where they are safer than artificial one-step hops. Known-bad 1.7.0 and 1.7.1 are intentionally bypassed.",
+  "notes": "A.C.E. upgrade graph reset at 1.5.9. Releases after 1.5.9 have been retired. The next release will be a new 1.6.0 built fresh from 1.5.9.",
   "routes": {
     "1.5.5": {
       "version": "1.5.6",
@@ -17,18 +17,6 @@
     "1.5.8": {
       "version": "1.5.9",
       "manifest_url": "https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/0bf3d68b638b3678ade2bcb00b5a551d6d55178c/latest.json"
-    },
-    "1.5.9": {
-      "version": "1.6.4",
-      "manifest_url": "https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/main/bridges/1.5.9-to-1.6.4.json"
-    },
-    "1.6.4": {
-      "version": "1.6.5",
-      "manifest_url": "https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/5e653e8d917f862dc7cb4033d5ab7ed8d122b64f/latest.json"
-    },
-    "1.6.5": {
-      "version": "1.7.2",
-      "manifest_url": "https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/main/bridges/1.6.5-to-1.7.2.json"
     }
   }
 }
