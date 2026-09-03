@@ -1,31 +1,31 @@
 {
-  "version": "1.7.2",
-  "notes": "Stabilization release for the 1.7 command-center UI. Removes remaining inherited blue/teal chrome by mapping legacy cyan/accent variables and preserved overlays to the approved dark-green/lime palette, including chat bubbles/actions, inline editing, attachments, project/live context, AI Search, command palette, preview resizing and artifact/overlay controls. Voice and Update no longer use fuzzy generic hidden-button routing: Update targets the proven #updateChip control directly, while Voice uses a dedicated offscreen rendered service island that preserves the original functional control and its handlers, with a legacy-root fallback if necessary. The clean 1.7.1 single-state Chat/Live architecture is retained, so no hidden legacy Chat/Live mode synchronization is reintroduced. The user-supplied green gear logo remains the visible A.C.E. branding. Regression capability checks confirmed attachments/document extraction/image vision, projects/history, AI Search, posters, presentations, Preview, downloads, Pocket TTS/voice, Stop, persistence and Google/Bing/DuckDuckGo research anchors remain present. Python, decompressed JavaScript, palette audit, logo hash, updater inputs and exact SHA-256 release hashes were verified from a fresh GitHub checkout before publication.",
+  "version": "1.5.4",
+  "notes": "Fixes the poster Preview Studio getting stuck on Ready when OpenDesign finishes as PPTX-only. A.C.E. now retries the lightweight macOS preview handoff while leaving poster and presentation generation unchanged.",
   "patch": {
-    "base": "1.7.1",
+    "base": "1.5.3",
     "files": [
       {
-        "path": "Contents/Resources/ACE Base 1.6.4.py",
-        "url": "updates/1.6.4/Contents/Resources/ACE%20Bootstrap%201.6.4%20integration.py",
-        "sha256": "427160fe296b276f6116061fb8768c73690342b194f178d84e15e73e134ef17a",
-        "mode": "644"
-      },
-      {
-        "path": "Contents/Resources/ACE Base 1.6.5.py",
-        "url": "updates/1.6.5/Contents/Resources/ACE%20Bootstrap%201.6.5%20attachments.py",
-        "sha256": "05080748a60577087bb3f690e7fe8a07178ce50d876a5736a51eb093fccbc91a",
-        "mode": "644"
+        "path": "Contents/MacOS/A.C.E.",
+        "url": "updates/1.5.4/Contents/MacOS/A.C.E.",
+        "sha256": "1e30f7294fe958a499765ab334d555de9222cb0e4ffd932544da9e3dc6cb7e04",
+        "mode": "755"
       },
       {
         "path": "Contents/Resources/ACE Bootstrap.py",
-        "url": "updates/1.7.2/Contents/Resources/ACE%20Bootstrap%201.7.2%20stabilization.py",
-        "sha256": "2e54fbea6b2a9ef7a999bac2786d0f2def2955a4b9f7046b3699cbc7a16073e5",
+        "url": "updates/1.5.4/Contents/Resources/ACE%20Bootstrap.py",
+        "sha256": "a028971d0b97f1d9561825e25d00a0a8336fee0ba08ccb7317ef2b0c6e37ec69",
+        "mode": "644"
+      },
+      {
+        "path": "Contents/Resources/index.html",
+        "url": "updates/1.5.4/Contents/Resources/index.html",
+        "sha256": "d2f593dee115e65326cd66e90e14db80438a7ce6b3673890661fa7e8bfa5c615",
         "mode": "644"
       },
       {
         "path": "Contents/Info.plist",
-        "url": "updates/1.7.2/Contents/Info.plist",
-        "sha256": "d045cb85437a94f31c9edeba800947732539b420a75140fe46e55b8c2ab04c57",
+        "url": "updates/1.5.4/Contents/Info.plist",
+        "sha256": "44825d16d040d38a5711f21087af34dc2fedc09daf66e7d8ec02c95522164d5b",
         "mode": "644"
       }
     ]
