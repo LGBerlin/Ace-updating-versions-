@@ -1,25 +1,25 @@
 {
-  "version": "1.6.0",
-  "notes": "Color-system refresh only. Replaces A.C.E.'s existing dark-blue/cyan theme with the supplied forest-green/lime reference palette by rewriting color values directly inside the existing stylesheet. No overlay UI, no new shell, no layout changes, and no button or event-handler logic changes. The complete A.C.E. 1.5.9 brain, research, voice, Stop, Preview/Edit, artifact generation and updater behavior remain the functional base.",
+  "version": "1.6.1",
+  "notes": "Fast research release. A.C.E. now normally researches 3 to 5 distinct websites, targeting 4 independent sources, with search discovery and page retrieval running in parallel under short hard time budgets. Slow or irrelevant websites no longer hold the answer open after enough useful evidence has arrived. Existing research caching, source cross-checking, the 1.6.0 forest/lime color scheme, local brain, voice, Stop, Preview/Edit, artifacts and all existing controls remain unchanged.",
   "patch": {
-    "base": "1.5.9",
+    "base": "1.6.0",
     "files": [
       {
-        "path": "Contents/Resources/ACE Base 1.5.9.py",
-        "url": "updates/1.5.9/Contents/Resources/ACE%20Bootstrap%201.5.9%20web.py",
-        "sha256": "5b645f5f53bfab02dc874a68d1418e2c323a2fe7ec2a4d5044a42b863691c6b2",
-        "mode": "644"
-      },
-      {
-        "path": "Contents/Resources/ACE Bootstrap.py",
+        "path": "Contents/Resources/ACE Base 1.6.0.py",
         "url": "updates/1.6.0/Contents/Resources/ACE%20Bootstrap%201.6.0%20theme.py",
         "sha256": "c5053584aa7a3c0c5a48bb05f3143f3160be3ac6b50465b0ea4c2b8b7bab438e",
         "mode": "644"
       },
       {
+        "path": "Contents/Resources/ACE Bootstrap.py",
+        "url": "updates/1.6.1/Contents/Resources/ACE%20Bootstrap%201.6.1%20fast%20research.py",
+        "sha256": "14211a914e3ea064171bcc243a4b8adfb31ed8d57bf868fc890fa8e6633349cf",
+        "mode": "644"
+      },
+      {
         "path": "Contents/Info.plist",
-        "url": "updates/1.6.0/Contents/Info.plist",
-        "sha256": "b42d27c2fea8de8f309ae2f9b5870698ebe2b907f02ca12a1cacc39079aa6e76",
+        "url": "updates/1.6.1/Contents/Info.plist",
+        "sha256": "948646553faba95a63f41573f4c03751daa0c01f292d784a2f753cb8961f0b1c",
         "mode": "644"
       }
     ]
