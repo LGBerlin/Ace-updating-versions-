@@ -1,0 +1,49 @@
+name: ACE 1.6.10 Manifest QA
+
+on:
+  push:
+    paths:
+      - 'updates/1.6.10/**'
+      - '.github/workflows/ace1610-manifest-qa.yml'
+  workflow_dispatch:
+
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify 1.6.10 updater package
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+
+          m=json.loads(Path('updates/1.6.10/manifest.json').read_text(encoding='utf-8'))
+          assert set(m)=={'version','notes','patch'}
+          assert m['version']=='1.6.10'
+          assert m['patch']['base']=='1.6.9'
+          files=m['patch']['files']
+          assert [x['path'] for x in files]==[
+              'Contents/Resources/ACE Base 1.6.4.py',
+              'Contents/Resources/ACE Grounded Research 1.6.10.py',
+              'Contents/Resources/ACE Local Poster 1.6.10.py',
+              'Contents/Resources/ACE Bootstrap.py',
+              'Contents/Info.plist',
+          ]
+          local={
+              'updates/1.6.4/Contents/Resources/ACE%20Bootstrap%201.6.4%20searxng.py': Path('updates/1.6.4/Contents/Resources/ACE Bootstrap 1.6.4 searxng.py'),
+              'updates/1.6.10/Contents/Resources/ACE%20Grounded%20Research%201.6.10.py': Path('updates/1.6.10/Contents/Resources/ACE Grounded Research 1.6.10.py'),
+              'updates/1.6.10/Contents/Resources/ACE%20Local%20Poster%201.6.10.py': Path('updates/1.6.10/Contents/Resources/ACE Local Poster 1.6.10.py'),
+              'updates/1.6.10/Contents/Resources/ACE%20Bootstrap%201.6.10%20integration.py': Path('updates/1.6.10/Contents/Resources/ACE Bootstrap 1.6.10 integration.py'),
+              'updates/1.6.10/Contents/Info.plist': Path('updates/1.6.10/Contents/Info.plist'),
+          }
+          for f in files:
+              assert f['mode']=='644'
+              p=local[f['url']]
+              actual=hashlib.sha256(p.read_bytes()).hexdigest()
+              assert actual==f['sha256'],(p,actual,f['sha256'])
+              print('MANIFEST_SHA256=PASS',f['path'],actual)
+          print('ACE1610_MANIFEST_QA=PASS')
+          PY
