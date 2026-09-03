@@ -1,13 +1,19 @@
 {
   "version": "1.5.5",
-  "notes": "Adds a cancel-and-close control for Artifact Preview, a global Stop A.C.E. control that stops speech/current chat work/OpenDesign generation, hover Edit/Delete controls under user messages, and simple Preview zoom from 10% to 200% in 10% steps.",
+  "notes": "Adds the 1.5.5 controls update and installs A.C.E.'s persistent version-aware updater. From this release onward, A.C.E. automatically offers only the next compatible verified update for the installed version, preserves the updater across subsequent releases, checks the upgrade graph automatically, and bypasses the known-bad 1.7.0/1.7.1 route in favor of the stabilized 1.7.2 bridge.",
   "patch": {
     "base": "1.5.4",
     "files": [
       {
-        "path": "Contents/Resources/ACE Bootstrap.py",
+        "path": "Contents/Resources/ACE Release Core.py",
         "url": "updates/1.5.5/Contents/Resources/ACE%20Bootstrap.py",
         "sha256": "eb617e1de7586d9c00af396aecbe87486c0f9fba3279e6fcc6f2c424a2d5b085",
+        "mode": "644"
+      },
+      {
+        "path": "Contents/Resources/ACE Bootstrap.py",
+        "url": "updates/1.5.5/Contents/Resources/ACE%20Bootstrap%20smart.py",
+        "sha256": "39b714354618ab771ef904cdee26c1ab11153e70c6a9f44f7ef910576c795140",
         "mode": "644"
       },
       {
