@@ -19,7 +19,7 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-          import ast, importlib.util, plistlib, tempfile, time, zipfile
+          import ast, hashlib, importlib.util, plistlib, tempfile, time, zipfile
           import xml.etree.ElementTree as ET
 
           R=Path('updates/1.6.10/Contents/Resources')
@@ -38,12 +38,10 @@ jobs:
           bs=boot.read_text(encoding='utf-8')
           assert "BASE = H / 'ACE Base 1.6.4.py'" in bs
           assert 'grounded.install(b164)' in bs and 'poster.install(ace, H, research=research)' in bs
-          # Reject actual old runtime imports, not explanatory comments about them.
           for forbidden in ("H / 'ACE Base 1.6.7.py'", "H / 'ACE OpenDesign Speed 1.6.9.py'", "H / 'ACE Artifact Guard 1.6.6.py'"):
               assert forbidden not in bs, forbidden
           print('CLEAN_RUNTIME_RESET=PASS')
 
-          # The inherited chain still contains the user's established local brain/voice/theme path.
           assert 'SearXNG-first research' in base164.read_text(encoding='utf-8')
           assert '/no_think' in base163.read_text(encoding='utf-8')
           assert 'Pocket TTS' in old157.read_text(encoding='utf-8')
@@ -58,7 +56,6 @@ jobs:
           assert 'PAGE_BUDGET = 3.65' in gs
           print('GROUNDED_SEARCH_STATIC=PASS')
 
-          # Exercise the evidence selector itself.
           spec=importlib.util.spec_from_file_location('ground1610',str(ground))
           gm=importlib.util.module_from_spec(spec); spec.loader.exec_module(gm)
           sample=('Navigation cookie privacy policy. Hats are used for sun protection. '
@@ -79,7 +76,6 @@ jobs:
 
           spec=importlib.util.spec_from_file_location('poster1610',str(poster))
           pm=importlib.util.module_from_spec(spec); spec.loader.exec_module(pm)
-          # Force deterministic fallback so CI never needs Ollama.
           pm._qwen_plan=lambda *a,**k: None
           class FakeAce: pass
           with tempfile.TemporaryDirectory() as td:
@@ -107,6 +103,8 @@ jobs:
           pl=plistlib.loads(plist.read_bytes())
           assert pl['CFBundleShortVersionString']=='1.6.10' and pl['CFBundleVersion']=='1.6.10'
           print('PLIST=PASS')
+          for p in (ground,poster,boot,plist):
+              print('SHA256',p,hashlib.sha256(p.read_bytes()).hexdigest())
           print('ACE1610_INTEGRATION_QA=PASS')
           PY
 
@@ -114,13 +112,30 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p /tmp/ace1610-searx
+          cat >/tmp/ace1610-searx/settings.yml <<'YAML'
+          use_default_settings: true
+          server:
+            secret_key: "ace1610-ci-secret"
+            bind_address: "0.0.0.0"
+            port: 8080
+          search:
+            formats:
+              - html
+              - json
+          YAML
           docker pull ghcr.io/searxng/searxng:2026.8.29-d226b78bc >/dev/null
-          docker run -d --rm --name ace1610-searx -p 127.0.0.1:8888:8080 ghcr.io/searxng/searxng:2026.8.29-d226b78bc >/dev/null
+          docker run -d --rm --name ace1610-searx \
+            -p 127.0.0.1:8888:8080 \
+            -v /tmp/ace1610-searx:/etc/searxng \
+            ghcr.io/searxng/searxng:2026.8.29-d226b78bc >/dev/null
           trap 'docker rm -f ace1610-searx >/dev/null 2>&1 || true' EXIT
+          ok=0
           for i in $(seq 1 30); do
-            if curl -fsS 'http://127.0.0.1:8888/search?q=capital+of+France&format=json' -o /tmp/searx.json; then break; fi
+            if curl -fsS 'http://127.0.0.1:8888/search?q=capital+of+France&format=json' -o /tmp/searx.json; then ok=1; break; fi
             sleep 1
           done
+          test "$ok" = 1
           python3 - <<'PY'
           import json
           d=json.load(open('/tmp/searx.json'))
