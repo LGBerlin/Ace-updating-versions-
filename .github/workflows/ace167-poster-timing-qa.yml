@@ -1,0 +1,50 @@
+name: ACE 1.6.7 Poster Timing QA
+
+on:
+  push:
+    paths:
+      - 'updates/1.6.7/**'
+      - '.github/workflows/ace167-poster-timing-qa.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate timer build preserves regression-safe base
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import ast, hashlib, plistlib
+          boot=Path('updates/1.6.7/Contents/Resources/ACE Bootstrap 1.6.7 poster timing.py')
+          base=Path('updates/1.6.6/Contents/Resources/ACE Bootstrap 1.6.6 regression.py')
+          guard=Path('updates/1.6.6/Contents/Resources/ACE Artifact Guard 1.6.6.py')
+          plist=Path('updates/1.6.7/Contents/Info.plist')
+          for p in (boot,base,guard):
+              src=p.read_text(encoding='utf-8'); ast.parse(src); compile(src,str(p),'exec')
+          s=boot.read_text(encoding='utf-8')
+          assert "BASE = H / 'ACE Base 1.6.6.py'" in s
+          assert "LOG = Path.home() / 'Library' / 'Logs' / 'ACE-Poster-Timing.log'" in s
+          for marker in ('opendesign_run_assigned','pptx_ready','preview_ready','complete','/api/poster-timing','ACE167_POSTER_TIMER'):
+              assert marker in s, marker
+          # Timing build must not replace research backend or artifact generation routes.
+          assert 'r159._research =' not in s
+          assert 'ACE_SEARXNG_URL' not in s
+          assert '/api/studio/save' not in s
+          assert '/api/studio/shapes' not in s
+          # Regression-safe base still owns local Docker SearXNG and poster guard.
+          bs=base.read_text(encoding='utf-8')
+          assert "LOCAL_SEARXNG = 'http://127.0.0.1:8888'" in bs
+          assert 'guard.install_backend(ace)' in bs and 'guard.patch_frontend(H)' in bs
+          gs=guard.read_text(encoding='utf-8')
+          assert "'/api/studio/save'" in gs and "'/api/studio/shapes'" in gs
+          pl=plistlib.loads(plist.read_bytes())
+          assert pl['CFBundleShortVersionString']=='1.6.7' and pl['CFBundleVersion']=='1.6.7'
+          for p in (base,guard,boot,plist):
+              print('SHA256',p,hashlib.sha256(p.read_bytes()).hexdigest())
+          print('ACE167_POSTER_TIMING_QA=PASS')
+          PY
