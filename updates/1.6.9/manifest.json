@@ -1,0 +1,33 @@
+{
+  "version": "1.6.9",
+  "notes": "Poster launch-path speed fix. 1.6.8 targeted the wrong OpenDesign helper, so low reasoning never reached the actual poster run. 1.6.9 supersedes that ineffective wrapper and intercepts only A.C.E.'s real local OpenDesign streaming POST /api/chat launch when agentId is codex, the project is an ace_* project and a poster job is active, injecting reasoning=low there. The 1.6.7 poster timer remains enabled. Docker SearXNG search, Ollama chat, poster Preview/Edit, save/export, voice, theme, Stop and source recall remain unchanged.",
+  "patch": {
+    "base": "1.6.8",
+    "files": [
+      {
+        "path": "Contents/Resources/ACE Base 1.6.7.py",
+        "url": "updates/1.6.7/Contents/Resources/ACE%20Bootstrap%201.6.7%20poster%20timing.py",
+        "sha256": "198ba581c1a978f53a3bd85faeffb7c85d19a9f4b47ac780b09b157563a7964c",
+        "mode": "644"
+      },
+      {
+        "path": "Contents/Resources/ACE OpenDesign Speed 1.6.9.py",
+        "url": "updates/1.6.9/Contents/Resources/ACE%20OpenDesign%20Speed%201.6.9.py",
+        "sha256": "b16b2ddbe00dc61c890062ae541fe041d9decee9052d8fc1b6a3b7892024c5c3",
+        "mode": "644"
+      },
+      {
+        "path": "Contents/Resources/ACE Bootstrap.py",
+        "url": "updates/1.6.9/Contents/Resources/ACE%20Bootstrap%201.6.9%20poster%20launch.py",
+        "sha256": "b0b3f112ad4fe2673bdd362d3ff9268f2be864af168cbc6d502f3f0f33a0b7b3",
+        "mode": "644"
+      },
+      {
+        "path": "Contents/Info.plist",
+        "url": "updates/1.6.9/Contents/Info.plist",
+        "sha256": "640f3ae7536beccc674226ee65e6390abd64e7e64992f469cbaa833b44f41a57",
+        "mode": "644"
+      }
+    ]
+  }
+}
