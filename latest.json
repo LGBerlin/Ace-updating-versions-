@@ -1,13 +1,13 @@
 {
-  "version": "1.6.6",
-  "notes": "Regression repair: keeps the now-working Docker SearXNG search path and restores/guards poster design, Preview and PPTX-backed poster editing in the same build. Research now goes directly to the local SearXNG service at 127.0.0.1:8888 first and no longer imports the broken 1.6.5 Python/PyPI SearXNG self-installer. The artifact guard preserves the existing OpenDesign generation path, starts the local Open Design app headlessly when its sidecar is absent, reasserts poster preview generation, and restores the real PowerPoint-backed Edit path without replacing presentation behavior, voice, theme, Stop or source recall.",
+  "version": "1.6.7",
+  "notes": "Poster timing diagnostic build. Keeps the complete regression-safe 1.6.6 runtime unchanged and adds measurement only. A.C.E. now shows a small elapsed poster timer in the artifact panel and records poster milestones including first job observation, OpenDesign run assignment, stage changes, PPTX availability, first usable preview and completion. OpenDesign HTTP-call durations are also logged when they can be associated with the poster. Detailed timing is written to ~/Library/Logs/ACE-Poster-Timing.log. Docker SearXNG search, poster generation, Preview/Edit, voice, theme, Stop and source recall remain on the 1.6.6 implementation.",
   "patch": {
-    "base": "1.6.5",
+    "base": "1.6.6",
     "files": [
       {
-        "path": "Contents/Resources/ACE Base 1.6.4.py",
-        "url": "updates/1.6.4/Contents/Resources/ACE%20Bootstrap%201.6.4%20searxng.py",
-        "sha256": "6689f554084315c0e1c9a4426cfb15c32de52465304127830e28d20efe3b3d51",
+        "path": "Contents/Resources/ACE Base 1.6.6.py",
+        "url": "updates/1.6.6/Contents/Resources/ACE%20Bootstrap%201.6.6%20regression.py",
+        "sha256": "d4e6aa8296c0bb96bbf91f0447a2d1869a296967a6ce222efa48937ab0656106",
         "mode": "644"
       },
       {
@@ -18,14 +18,14 @@
       },
       {
         "path": "Contents/Resources/ACE Bootstrap.py",
-        "url": "updates/1.6.6/Contents/Resources/ACE%20Bootstrap%201.6.6%20regression.py",
-        "sha256": "d4e6aa8296c0bb96bbf91f0447a2d1869a296967a6ce222efa48937ab0656106",
+        "url": "updates/1.6.7/Contents/Resources/ACE%20Bootstrap%201.6.7%20poster%20timing.py",
+        "sha256": "198ba581c1a978f53a3bd85faeffb7c85d19a9f4b47ac780b09b157563a7964c",
         "mode": "644"
       },
       {
         "path": "Contents/Info.plist",
-        "url": "updates/1.6.6/Contents/Info.plist",
-        "sha256": "32e9246f7b9f342f89a6e88ec719dde01d653e5031fc4373c358655db3c5d0b7",
+        "url": "updates/1.6.7/Contents/Info.plist",
+        "sha256": "f3d8b78064c4c220cf31cf988dc7442749589a1520d8f876b82f96fa9da6b4f7",
         "mode": "644"
       }
     ]
