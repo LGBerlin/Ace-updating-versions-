@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "notes": "Version-aware A.C.E. safe upgrade graph. Each installed version is offered only its next compatible verified package. Known-bad 1.7.0 and 1.7.1 are intentionally bypassed.",
+  "routes": {
+    "1.5.5": {
+      "version": "1.5.6",
+      "manifest_url": "https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/659d5ad7542b9fae91ac9cc3897b1517efe4faaf/latest.json"
+    },
+    "1.5.6": {
+      "version": "1.5.7",
+      "manifest_url": "https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/8244b2dc9d6218340c7a09b5fef570d76f334bf0/latest.json"
+    },
+    "1.5.7": {
+      "version": "1.5.8",
+      "manifest_url": "https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/602fce8c311e4fbdb8b8ae721e823c6ec1878af1/latest.json"
+    },
+    "1.5.8": {
+      "version": "1.5.9",
+      "manifest_url": "https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/0bf3d68b638b3678ade2bcb00b5a551d6d55178c/latest.json"
+    },
+    "1.5.9": {
+      "version": "1.6.0",
+      "manifest_url": "https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/3e1d017e1bad8f3e08118b264c85c9cae397e1ff/latest.json"
+    },
+    "1.6.0": {
+      "version": "1.6.1",
+      "manifest_url": "https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/87ba88cc5b2fc5b0c81be4142d26f75cb3162953/latest.json"
+    },
+    "1.6.1": {
+      "version": "1.6.2",
+      "manifest_url": "https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/443d07865b52d56f8591cf232381d4c32cc1af2c/latest.json"
+    },
+    "1.6.2": {
+      "version": "1.6.3",
+      "manifest_url": "https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/26a6e36d1c924bd52e43d2547ccf13d8dae73208/latest.json"
+    },
+    "1.6.3": {
+      "version": "1.6.4",
+      "manifest_url": "https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/dc371056b48afd8c0472544410291bf536b525a8/latest.json"
+    },
+    "1.6.4": {
+      "version": "1.6.5",
+      "manifest_url": "https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/5e653e8d917f862dc7cb4033d5ab7ed8d122b64f/latest.json"
+    },
+    "1.6.5": {
+      "version": "1.7.2",
+      "manifest_url": "https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/main/bridges/1.6.5-to-1.7.2.json"
+    }
+  }
+}
