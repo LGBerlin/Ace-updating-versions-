@@ -1,0 +1,76 @@
+name: ACE 1.6.9 Poster Launch QA
+
+on:
+  push:
+    paths:
+      - 'updates/1.6.9/**'
+      - '.github/workflows/ace169-poster-launch-qa.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate exact OpenDesign streaming interception
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import ast, hashlib, importlib.util, json, plistlib, urllib.request
+
+          helper=Path('updates/1.6.9/Contents/Resources/ACE OpenDesign Speed 1.6.9.py')
+          boot=Path('updates/1.6.9/Contents/Resources/ACE Bootstrap 1.6.9 poster launch.py')
+          base=Path('updates/1.6.7/Contents/Resources/ACE Bootstrap 1.6.7 poster timing.py')
+          plist=Path('updates/1.6.9/Contents/Info.plist')
+          for p in (helper,boot,base):
+              src=p.read_text(encoding='utf-8');ast.parse(src);compile(src,str(p),'exec')
+
+          spec=importlib.util.spec_from_file_location('speed169',str(helper))
+          m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+
+          def req(url, body):
+              return urllib.request.Request(url,data=json.dumps(body).encode(),headers={'Content-Type':'application/json'},method='POST')
+
+          original={'agentId':'codex','projectId':'ace_abc123','message':'make a poster','model':'default'}
+          out,applied,meta=m.rewrite_request(req('http://127.0.0.1:54321/api/chat',original))
+          body=json.loads(out.data.decode())
+          assert applied and body['reasoning']=='low'
+          assert body['agentId']=='codex' and body['projectId']=='ace_abc123' and body['message']=='make a poster'
+          assert meta['agent']=='codex' and meta['project']=='ace_abc123'
+          print('OPENDESIGN_STREAM_REWRITE=PASS')
+
+          # Ollama also uses /api/chat; it must remain byte-for-byte untouched.
+          ollama=req('http://127.0.0.1:11434/api/chat',{'model':'qwen3.5:4b','messages':[{'role':'user','content':'hello'}]})
+          out2,applied2,_=m.rewrite_request(ollama)
+          assert not applied2 and out2 is ollama
+          print('OLLAMA_ISOLATION=PASS')
+
+          # Non-A.C.E. OpenDesign project and non-Codex agent are not touched.
+          other=req('http://localhost:4000/api/chat',{'agentId':'codex','projectId':'other_project','message':'poster'})
+          assert not m.rewrite_request(other)[1]
+          claude=req('http://localhost:4000/api/chat',{'agentId':'claude','projectId':'ace_x','message':'poster'})
+          assert not m.rewrite_request(claude)[1]
+          remote=req('https://example.com/api/chat',original)
+          assert not m.rewrite_request(remote)[1]
+          print('INTERCEPT_GUARDS=PASS')
+
+          bs=boot.read_text(encoding='utf-8')
+          assert "BASE = H / 'ACE Base 1.6.7.py'" in bs
+          assert "SPEED = H / 'ACE OpenDesign Speed 1.6.9.py'" in bs
+          assert 'speed.install(ace)' in bs
+          assert 'r159._research =' not in bs and '/api/studio/save' not in bs and '/api/studio/shapes' not in bs
+          hs=helper.read_text(encoding='utf-8')
+          assert "parsed.path != '/api/chat'" in hs
+          assert "body.get('agentId')" in hs and "project.startswith('ace_')" in hs
+          assert "body['reasoning'] = 'low'" in hs
+          assert 'POSTER SPEED APPLIED low_reasoning via=urlopen' in hs
+
+          pl=plistlib.loads(plist.read_bytes())
+          assert pl['CFBundleShortVersionString']=='1.6.9' and pl['CFBundleVersion']=='1.6.9'
+          for p in (base,helper,boot,plist):
+              print('SHA256',p,hashlib.sha256(p.read_bytes()).hexdigest())
+          print('ACE169_POSTER_LAUNCH_QA=PASS')
+          PY
