@@ -1,0 +1,130 @@
+name: ACE 1.6.10 Integration QA
+
+on:
+  push:
+    paths:
+      - 'updates/1.6.10/**'
+      - '.github/workflows/ace1610-integration-qa.yml'
+  workflow_dispatch:
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate integrated runtime and deterministic poster
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import ast, importlib.util, json, plistlib, tempfile, time, zipfile
+          import xml.etree.ElementTree as ET
+
+          R=Path('updates/1.6.10/Contents/Resources')
+          ground=R/'ACE Grounded Research 1.6.10.py'
+          poster=R/'ACE Local Poster 1.6.10.py'
+          boot=R/'ACE Bootstrap 1.6.10 integration.py'
+          plist=Path('updates/1.6.10/Contents/Info.plist')
+          base164=Path('updates/1.6.4/Contents/Resources/ACE Bootstrap 1.6.4 searxng.py')
+          base163=Path('updates/1.6.3/Contents/Resources/ACE Bootstrap 1.6.3 instant research.py')
+          old157=Path('updates/1.5.7/Contents/Resources/ACE Bootstrap.py')
+
+          for p in (ground,poster,boot,base164,base163,old157):
+              src=p.read_text(encoding='utf-8')
+              ast.parse(src); compile(src,str(p),'exec')
+
+          bs=boot.read_text(encoding='utf-8')
+          assert "BASE = H / 'ACE Base 1.6.4.py'" in bs
+          assert 'grounded.install(b164)' in bs and 'poster.install(ace, H, research=research)' in bs
+          for forbidden in ('ACE Base 1.6.7.py','ACE OpenDesign Speed','ACE Artifact Guard','poster timing','low_reasoning'):
+              assert forbidden not in bs, forbidden
+          print('CLEAN_RUNTIME_RESET=PASS')
+
+          # The inherited chain still contains the user's established local brain/voice/theme path.
+          assert 'SearXNG-first research' in base164.read_text(encoding='utf-8')
+          assert '/no_think' in base163.read_text(encoding='utf-8')
+          assert 'Pocket TTS' in old157.read_text(encoding='utf-8')
+          assert Path('updates/1.6.0/Contents/Resources/ACE Bootstrap 1.6.0 theme.py').is_file()
+          print('CHAT_VOICE_THEME_CHAIN=PASS')
+
+          gs=ground.read_text(encoding='utf-8')
+          assert "LOCAL_SEARXNG = 'http://127.0.0.1:8888'" in gs
+          assert 'STRICT EVIDENCE MODE' in gs
+          assert 'Never fill an evidence gap with a plausible guess' in gs
+          assert "'evidence_kind': 'page'" in gs
+          assert 'PAGE_BUDGET = 3.65' in gs
+          print('GROUNDED_SEARCH_STATIC=PASS')
+
+          # Exercise the evidence selector itself.
+          spec=importlib.util.spec_from_file_location('ground1610',str(ground))
+          gm=importlib.util.module_from_spec(spec); spec.loader.exec_module(gm)
+          sample=('Navigation cookie privacy policy. Hats are used for sun protection. '
+                  'A school dress policy can define safety exceptions. Students may use clothing for self-expression. '
+                  'This sentence is unrelated filler about lunch menus.')
+          excerpt=gm.compact_excerpt(sample,'school hats self-expression safety')
+          assert 'self-expression' in excerpt and ('safety' in excerpt or 'Hats' in excerpt)
+          print('EVIDENCE_SELECTOR=PASS',excerpt)
+
+          ps=poster.read_text(encoding='utf-8')
+          assert '/api/local-poster/start' in ps and '/api/local-poster/download' in ps
+          assert 'ACE1610_LOCAL_POSTER' in ps
+          assert 'posterIntent' in ps and 'return original.apply(this,arguments)' in ps
+          assert "ed.style.display='none'" in ps
+          assert 'OpenDesign/Codex' in ps
+          assert 'Arial' in ps and 'Aptos' not in ps and 'Calibri' not in ps
+          print('POSTER_ROUTING_STATIC=PASS')
+
+          spec=importlib.util.spec_from_file_location('poster1610',str(poster))
+          pm=importlib.util.module_from_spec(spec); spec.loader.exec_module(pm)
+          # Force deterministic fallback so CI never needs Ollama.
+          pm._qwen_plan=lambda *a,**k: None
+          class FakeAce: pass
+          with tempfile.TemporaryDirectory() as td:
+              t0=time.perf_counter()
+              j1=pm.create_artifact(FakeAce(),'Make me a poster on why hats and headwear should be allowed in school.',root=td)
+              j2=pm.create_artifact(FakeAce(),'Make me a poster on why hats and headwear should be allowed in school.',root=td)
+              elapsed=time.perf_counter()-t0
+              assert j1['job_id'] != j2['job_id']
+              assert j1['preview_path'] != j2['preview_path'] and j1['pptx_path'] != j2['pptx_path']
+              assert Path(j1['preview_path']).is_file() and Path(j1['pptx_path']).is_file()
+              svg=Path(j1['preview_path']).read_text(encoding='utf-8')
+              assert 'Hats Belong at School' in svg and '<svg' in svg
+              with zipfile.ZipFile(j1['pptx_path']) as z:
+                  names=set(z.namelist())
+                  required={'[Content_Types].xml','ppt/presentation.xml','ppt/slides/slide1.xml','ppt/slideMasters/slideMaster1.xml','ppt/slideLayouts/slideLayout1.xml','ppt/theme/theme1.xml'}
+                  assert required <= names
+                  slide=z.read('ppt/slides/slide1.xml')
+                  ET.fromstring(slide)
+                  text=slide.decode('utf-8')
+                  assert 'Hats Belong at School' in text and 'Expression matters' in text and 'Comfort supports focus' in text
+              assert elapsed < 2.0, elapsed
+              print('LOCAL_POSTER_BUILD=PASS',round(elapsed,4),'seconds for two deterministic artifacts')
+              print('UNIQUE_OUTPUTS=PASS',j1['job_id'],j2['job_id'])
+
+          pl=plistlib.loads(plist.read_bytes())
+          assert pl['CFBundleShortVersionString']=='1.6.10' and pl['CFBundleVersion']=='1.6.10'
+          print('PLIST=PASS')
+          print('ACE1610_INTEGRATION_QA=PASS')
+          PY
+
+      - name: Verify real localhost SearXNG discovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker pull ghcr.io/searxng/searxng:2026.8.29-d226b78bc >/dev/null
+          docker run -d --rm --name ace1610-searx -p 127.0.0.1:8888:8080 ghcr.io/searxng/searxng:2026.8.29-d226b78bc >/dev/null
+          trap 'docker rm -f ace1610-searx >/dev/null 2>&1 || true' EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS 'http://127.0.0.1:8888/search?q=capital+of+France&format=json' -o /tmp/searx.json; then break; fi
+            sleep 1
+          done
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/searx.json'))
+          r=d.get('results') or []
+          assert len(r)>=3,len(r)
+          assert all(x.get('url') for x in r[:3])
+          print('LOCALHOST_SEARXNG=PASS',len(r),'results')
+          PY
