@@ -1,0 +1,104 @@
+name: ACE 1.6.0 Package QA
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'latest.json'
+      - 'updates/1.6.0/**'
+      - '.github/workflows/ace160-package-qa.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate A.C.E. 1.6.0 update package
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import ast, hashlib, json, plistlib, re, sys
+          from urllib.parse import unquote
+
+          repo = Path('.')
+          latest = json.loads((repo/'latest.json').read_text())
+          manifest = json.loads((repo/'updates/1.6.0/manifest.json').read_text())
+
+          assert latest['version'] == '1.6.0', latest
+          assert latest['patch']['base'] == '1.5.9', latest
+          assert manifest['version'] == '1.6.0', manifest
+          assert manifest['patch']['base'] == '1.5.9', manifest
+          assert latest['patch']['files'] == manifest['patch']['files'], 'live feed and immutable manifest differ'
+
+          expected_paths = {
+              'Contents/Resources/ACE Base 1.5.9.py',
+              'Contents/Resources/ACE Bootstrap.py',
+              'Contents/Info.plist',
+          }
+          got_paths = {x['path'] for x in latest['patch']['files']}
+          assert got_paths == expected_paths, (got_paths, expected_paths)
+
+          print('Manifest entries:')
+          for item in latest['patch']['files']:
+              rel = unquote(item['url'])
+              p = repo / rel
+              assert p.is_file(), f'missing package file: {rel}'
+              digest = hashlib.sha256(p.read_bytes()).hexdigest()
+              print(item['path'], digest)
+              assert digest == item['sha256'], f"SHA256 mismatch for {item['path']}: manifest={item['sha256']} actual={digest}"
+
+          plist = plistlib.loads((repo/'updates/1.6.0/Contents/Info.plist').read_bytes())
+          assert plist['CFBundleShortVersionString'] == '1.6.0', plist
+          assert plist['CFBundleVersion'] == '1.6.0', plist
+
+          theme_path = repo/'updates/1.6.0/Contents/Resources/ACE Bootstrap 1.6.0 theme.py'
+          theme = theme_path.read_text()
+          ast.parse(theme, filename=str(theme_path))
+          assert "BASE = H / 'ACE Base 1.5.9.py'" in theme
+          assert "ace.VERSION = '1.6.0'" in theme
+          assert "_patch_file(H / 'app.css'" in theme
+          assert "_patch_file(H / 'index.html'" in theme
+          assert not re.search(r"_patch_file\(H\s*/\s*['\"]app\.js", theme), '1.6.0 must not rewrite app.js behavior'
+          assert '1.6.1' not in theme and '1.7.' not in theme, 'retired branch dependency leaked into new 1.6.0'
+
+          base_path = repo/'updates/1.5.9/Contents/Resources/ACE Bootstrap 1.5.9 web.py'
+          base = base_path.read_text()
+          ast.parse(base, filename=str(base_path))
+          assert "ace.VERSION = '1.5.9'" in base
+
+          for p in (repo/'updates/1.6.0').rglob('*.py'):
+              compile(p.read_text(), str(p), 'exec')
+
+          retired = [p.name for p in (repo/'updates').iterdir() if p.is_dir() and p.name not in {'1.5.4','1.5.5','1.5.6','1.5.7','1.5.8','1.5.9','1.6.0'}]
+          assert not retired, f'retired update directories present: {retired}'
+
+          print('LOCAL_PACKAGE_QA=PASS')
+          PY
+
+          echo 'Checking raw GitHub bytes exactly as the updater sees them...'
+          curl -fsSL -H 'Cache-Control: no-cache' "https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/main/latest.json?qa=${GITHUB_SHA}" -o /tmp/latest.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/latest.json'))
+          assert d['version']=='1.6.0'
+          assert d['patch']['base']=='1.5.9'
+          print('RAW_FEED=PASS', d['version'], 'base', d['patch']['base'])
+          PY
+
+          python3 - <<'PY'
+          import hashlib,json,subprocess,urllib.parse
+          d=json.load(open('/tmp/latest.json'))
+          root='https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/main/'
+          for i,x in enumerate(d['patch']['files']):
+              url=x['url'] if x['url'].startswith('http') else root+x['url']
+              url += ('&' if '?' in url else '?') + 'qa=network'
+              out=f'/tmp/file{i}'
+              subprocess.run(['curl','-fsSL','-H','Cache-Control: no-cache',url,'-o',out],check=True)
+              got=hashlib.sha256(open(out,'rb').read()).hexdigest()
+              print('RAW_FILE',x['path'],got)
+              assert got==x['sha256'], (x['path'],x['sha256'],got)
+          print('RAW_DOWNLOAD_QA=PASS')
+          PY
