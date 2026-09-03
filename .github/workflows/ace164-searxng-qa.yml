@@ -1,0 +1,109 @@
+name: ACE 1.6.4 SearXNG QA
+
+on:
+  push:
+    paths:
+      - 'updates/1.6.4/**'
+      - '.github/workflows/ace164-searxng-qa.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate SearXNG-first release
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import ast, hashlib, json, plistlib, re, urllib.parse
+          from html.parser import HTMLParser
+
+          root=Path('.')
+          p=root/'updates/1.6.4/Contents/Resources/ACE Bootstrap 1.6.4 searxng.py'
+          src=p.read_text()
+          tree=ast.parse(src,filename=str(p)); compile(src,str(p),'exec')
+          assert "BASE = H / 'ACE Base 1.6.3.py'" in src
+          assert "ace.VERSION = '1.6.4'" in src
+          assert "r159._research = _research_searxng" in src
+          assert "r159._evidence_block = _searx_evidence_block" in src
+          assert "MIN_SOURCES = 3" in src and "MAX_SOURCES = 5" in src
+          assert "'/no_think'" not in src or '/no_think' in src
+          assert "_SOURCE_REQUEST" in src and "_remembered_sources" in src
+          assert "search.inetol.net" in src
+          assert "127.0.0.1:8888" in src
+          assert "_FALLBACK_RESEARCH = r159._research" in src
+          assert "_patch_file" not in src or "app.js" not in src
+
+          manifest=json.loads((root/'updates/1.6.4/manifest.json').read_text())
+          assert manifest['version']=='1.6.4'
+          assert manifest['patch']['base']=='1.6.3'
+          expected={
+            'Contents/Resources/ACE Base 1.6.3.py':'8e50a45bc4914c8e841d206e84115db9f55fe023f51c4b034eabca137633a1f5',
+            'Contents/Resources/ACE Bootstrap.py':'5aeccad10ba2898afcb2a338131b569c2c91af30c1c13825c68c4bdf2cf81395',
+            'Contents/Info.plist':'b9b2c353db30012ce583c63a2ab7f6a373df07755a5d285cb8738a6dc848ad56',
+          }
+          assert {x['path']:x['sha256'] for x in manifest['patch']['files']}==expected
+
+          for item in manifest['patch']['files']:
+            rel=urllib.parse.unquote(item['url'])
+            f=root/rel
+            assert f.is_file(), rel
+            got=hashlib.sha256(f.read_bytes()).hexdigest()
+            print('SHA256',item['path'],got)
+            assert got==item['sha256'], (item['path'],got,item['sha256'])
+
+          pl=plistlib.loads((root/'updates/1.6.4/Contents/Info.plist').read_bytes())
+          assert pl['CFBundleShortVersionString']=='1.6.4'
+          assert pl['CFBundleVersion']=='1.6.4'
+
+          # Execute only the standalone result parsers from the release source.
+          wanted={'_clean_text','_domain','_result_item','_json_results','_SearxHTML','_html_results'}
+          nodes=[]
+          for n in tree.body:
+            if isinstance(n,ast.Assign):
+              names={t.id for t in n.targets if isinstance(t,ast.Name)}
+              if '_SKIP_HOSTS' in names: nodes.append(n)
+            elif isinstance(n,(ast.FunctionDef,ast.ClassDef)) and n.name in wanted:
+              nodes.append(n)
+          ns={'re':re,'json':json,'urllib':__import__('urllib'),'HTMLParser':HTMLParser}
+          exec(compile(ast.Module(body=nodes,type_ignores=[]),'<parser-test>','exec'),ns)
+          sample=json.dumps({'results':[
+            {'url':'https://a.example/x','title':'A','content':'alpha','engines':['google'],'score':3},
+            {'url':'https://b.example/x','title':'B','content':'beta','engines':['bing'],'score':2},
+            {'url':'https://c.example/x','title':'C','content':'gamma','engines':['duckduckgo'],'score':1},
+            {'url':'https://d.example/x','title':'D','content':'delta','engines':['brave'],'score':0.5},
+          ]})
+          jr=ns['_json_results'](sample)
+          assert len(jr)==4 and jr[0]['url']=='https://a.example/x'
+          html='''<article class="result result-default"><h3><a href="https://one.example/a">One</a></h3><p class="content">First snippet.</p></article><article class="result"><h3><a href="https://two.example/b">Two</a></h3><p class="content">Second snippet.</p></article>'''
+          hr=ns['_html_results'](html)
+          assert len(hr)==2, hr
+          assert hr[0]['url']=='https://one.example/a' and 'First snippet' in hr[0]['excerpt']
+          print('SEARX_PARSER_QA=PASS',len(jr),len(hr))
+          print('ACE164_QA=PASS')
+          PY
+
+          echo 'Checking exact raw GitHub package bytes...'
+          python3 - <<'PY'
+          import hashlib,json,subprocess
+          d=json.load(open('updates/1.6.4/manifest.json'))
+          root='https://raw.githubusercontent.com/LGBerlin/Ace-updating-versions-/main/'
+          for i,x in enumerate(d['patch']['files']):
+              url=root+x['url']+'?qa=ace164'
+              out=f'/tmp/ace164-{i}'
+              subprocess.run(['curl','-fsSL','--max-time','10',url,'-o',out],check=True)
+              got=hashlib.sha256(open(out,'rb').read()).hexdigest()
+              print('RAW_FILE',x['path'],got)
+              assert got==x['sha256']
+          print('RAW_DOWNLOAD_QA=PASS')
+          PY
+
+          echo 'Optional public SearXNG smoke (diagnostic only):'
+          for base in https://search.inetol.net https://searx.be https://search.bus-hit.me; do
+            code=$(curl -L -sS -o /tmp/searx-smoke -w '%{http_code}' --max-time 4 "$base/search?q=searxng+test" || true)
+            echo "$base -> $code"
+            if [ "$code" = "200" ]; then break; fi
+          done
